@@ -74,18 +74,20 @@
     <div class="hero__circle hero__circle--2"></div>
     <div class="hero__circle hero__circle--3"></div>
 
-    <!-- Gallery Row -->
-    <div class="hero__gallery">
-      <div class="hero__gallery-card"><img src="images/hero-1.png" alt="Round Metal Eyeglasses" /></div>
-      <div class="hero__gallery-card"><img src="images/hero-2.png" alt="Sunglasses Collection" /></div>
-      <div class="hero__gallery-card"><img src="images/hero-3.png" alt="Premium Sunglasses" /></div>
-      <div class="hero__gallery-card"><img src="images/hero-4.png" alt="Wire Frame Glasses" /></div>
-      <div class="hero__gallery-card"><img src="images/hero-5.png" alt="Tortoiseshell Glasses" /></div>
-      <div class="hero__gallery-card"><img src="images/hero-1.png" alt="Round Metal Eyeglasses" /></div>
+    <!-- Gallery Row — infinite CSS-driven scroll -->
+    <div class="hero__gallery-wrap">
+      <div class="hero__gallery">
+        <div class="hero__gallery-card"><img src="images/hero-1.png" alt="Round Metal Eyeglasses" /></div>
+        <div class="hero__gallery-card"><img src="images/hero-2.png" alt="Sunglasses Collection" /></div>
+        <div class="hero__gallery-card"><img src="images/hero-3.png" alt="Premium Sunglasses" /></div>
+        <div class="hero__gallery-card"><img src="images/hero-4.png" alt="Wire Frame Glasses" /></div>
+        <div class="hero__gallery-card"><img src="images/hero-5.png" alt="Tortoiseshell Glasses" /></div>
+        <div class="hero__gallery-card"><img src="images/hero-1.png" alt="Round Metal Eyeglasses" /></div>
+      </div>
     </div>
 
     <!-- Hero Content -->
-    <div class="hero__content reveal">
+    <div class="hero__content reveal-blur">
       <p class="hero__badge">Since 1980 — Vidisha, Madhya Pradesh</p>
       <h1 class="hero__title">
         Precision Meets Legacy.<br />
@@ -112,17 +114,17 @@
 
   <!-- ═══════════ COLLECTION SECTION ═══════════ -->
   <section class="collection" id="collection">
-    <div class="collection__header reveal">
-      <div>
+    <div class="collection__header">
+      <div class="reveal-left">
         <p class="collection__label">Our Collection</p>
         <h2 class="collection__title">Curated for <span class="accent">Every Vision</span></h2>
       </div>
-      <p class="collection__subtitle">Precision-fitted using our special automatic machines. Browse 6 premium categories.</p>
+      <p class="collection__subtitle reveal-right">Precision-fitted using our special automatic machines. Browse 6 premium categories.</p>
     </div>
 
     <!-- Top Row — 2 large cards -->
     <div class="collection__grid">
-      <a href="collection.html?cat=sunglasses" class="category-card reveal reveal-delay-1">
+      <a href="collection.html?cat=sunglasses" class="category-card reveal-scale reveal-delay-1 tilt-hover">
         <img src="images/sunglasses.png" alt="Sunglasses Collection" class="category-card__image" />
         <span class="category-card__number">01</span>
         <div class="category-card__overlay">
@@ -132,7 +134,7 @@
           <span class="category-card__link">Explore →</span>
         </div>
       </a>
-      <a href="collection.html?cat=reading" class="category-card reveal reveal-delay-2">
+      <a href="collection.html?cat=reading" class="category-card reveal-scale reveal-delay-2 tilt-hover">
         <img src="images/reading.png" alt="Reading Glasses" class="category-card__image" />
         <span class="category-card__number">02</span>
         <div class="category-card__overlay">
@@ -146,7 +148,7 @@
 
     <!-- Bottom Row — 4 smaller cards -->
     <div class="collection__grid-row2">
-      <a href="collection.html?cat=computer" class="category-card reveal reveal-delay-3">
+      <a href="collection.html?cat=computer" class="category-card reveal-scale reveal-delay-3 tilt-hover">
         <img src="images/computer.png" alt="Computer Glasses" class="category-card__image" />
         <span class="category-card__number">03</span>
         <div class="category-card__overlay">
@@ -156,7 +158,7 @@
           <span class="category-card__link">Explore →</span>
         </div>
       </a>
-      <a href="collection.html?cat=sports" class="category-card reveal reveal-delay-4">
+      <a href="collection.html?cat=sports" class="category-card reveal-scale reveal-delay-4 tilt-hover">
         <img src="images/sports.png" alt="Sports Eyewear" class="category-card__image" />
         <span class="category-card__number">04</span>
         <div class="category-card__overlay">
@@ -166,7 +168,7 @@
           <span class="category-card__link">Explore →</span>
         </div>
       </a>
-      <a href="collection.html?cat=kids" class="category-card reveal reveal-delay-5">
+      <a href="collection.html?cat=kids" class="category-card reveal-scale reveal-delay-5 tilt-hover">
         <img src="images/kids.png" alt="Kids Eyewear" class="category-card__image" />
         <span class="category-card__number">05</span>
         <div class="category-card__overlay">
@@ -176,7 +178,7 @@
           <span class="category-card__link">Explore →</span>
         </div>
       </a>
-      <a href="collection.html?cat=contacts" class="category-card reveal reveal-delay-6">
+      <a href="collection.html?cat=contacts" class="category-card reveal-scale reveal-delay-6 tilt-hover">
         <img src="images/contacts.png" alt="Contact Lenses" class="category-card__image" />
         <span class="category-card__number">06</span>
         <div class="category-card__overlay">
@@ -192,7 +194,7 @@
   <!-- ═══════════ MACHINE PRECISION SECTION ═══════════ -->
   <section class="precision" id="precision">
     <div class="precision__inner">
-      <div class="precision__image-wrap reveal">
+      <div class="precision__image-wrap reveal-left" data-parallax="0.05">
         <img src="images/machine.png" alt="Precision Lens Cutting Machine" />
         <div class="precision__marker">
           <div class="precision__marker-dot"></div>
@@ -200,17 +202,17 @@
         </div>
       </div>
       <div class="precision__content">
-        <p class="precision__label reveal">Machines of Precision</p>
-        <h2 class="precision__title reveal reveal-delay-1">
+        <p class="precision__label reveal-right">Machines of Precision</p>
+        <h2 class="precision__title reveal-right reveal-delay-1">
           Human Supervision.<br />
           <span class="accent">Machine Perfection.</span>
         </h2>
-        <p class="precision__description reveal reveal-delay-2">
+        <p class="precision__description reveal-right reveal-delay-2">
           Our state-of-the-art automatic machines are the cornerstone of our commitment to quality.
           Each lens is precision-cut using computerized processes, verified by our expert opticians.
         </p>
-        <div class="precision__features">
-          <div class="precision__feature reveal reveal-delay-3">
+        <div class="precision__features stagger-parent">
+          <div class="precision__feature stagger-child">
             <div class="precision__feature-icon">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
             </div>
@@ -219,7 +221,7 @@
               <p>Our automatic machines deliver micron-level accuracy on every lens cut.</p>
             </div>
           </div>
-          <div class="precision__feature reveal reveal-delay-4">
+          <div class="precision__feature stagger-child">
             <div class="precision__feature-icon">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
             </div>
@@ -228,7 +230,7 @@
               <p>Advanced automation reduces turnaround from days to hours.</p>
             </div>
           </div>
-          <div class="precision__feature reveal reveal-delay-5">
+          <div class="precision__feature stagger-child">
             <div class="precision__feature-icon">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/><path d="M9 12l2 2 4-4"/></svg>
             </div>
@@ -237,7 +239,7 @@
               <p>Every lens passes through multi-stage automated inspection.</p>
             </div>
           </div>
-          <div class="precision__feature reveal reveal-delay-6">
+          <div class="precision__feature stagger-child">
             <div class="precision__feature-icon">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
             </div>
@@ -253,8 +255,8 @@
 
   <!-- ═══════════ BRANDS / PARTNERS ═══════════ -->
   <section class="brands" id="brands">
-    <p class="brands__label reveal">Our Partners</p>
-    <h2 class="brands__title reveal reveal-delay-1">Brands We <span class="accent">Carry</span></h2>
+    <p class="brands__label reveal-blur">Our Partners</p>
+    <h2 class="brands__title reveal-blur reveal-delay-1">Brands We <span class="accent">Carry</span></h2>
 
     <div class="brands__marquee">
       <div class="brands__track" id="brands-track-1">
@@ -292,11 +294,11 @@
 
   <!-- ═══════════ TRUST / STATS SECTION ═══════════ -->
   <section class="trust" id="trust">
-    <p class="trust__label reveal">Why Choose Us</p>
-    <h2 class="trust__title reveal reveal-delay-1">Built on <span class="accent">Trust</span> &amp; Precision</h2>
+    <p class="trust__label reveal-blur">Why Choose Us</p>
+    <h2 class="trust__title reveal-blur reveal-delay-1">Built on <span class="accent">Trust</span> &amp; Precision</h2>
 
-    <div class="trust__grid">
-      <div class="trust__stat reveal reveal-delay-2">
+    <div class="trust__grid stagger-parent">
+      <div class="trust__stat stagger-child">
         <div class="trust__stat-icon">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
         </div>
@@ -304,7 +306,7 @@
         <div class="trust__stat-label">Years of Trust</div>
         <div class="trust__stat-desc">Monika Opticals, Vidisha since 1980</div>
       </div>
-      <div class="trust__stat reveal reveal-delay-3">
+      <div class="trust__stat stagger-child">
         <div class="trust__stat-icon">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
         </div>
@@ -312,7 +314,7 @@
         <div class="trust__stat-label">Happy Customers</div>
         <div class="trust__stat-desc">Families trust us with their vision</div>
       </div>
-      <div class="trust__stat reveal reveal-delay-4">
+      <div class="trust__stat stagger-child">
         <div class="trust__stat-icon">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
         </div>
@@ -320,7 +322,7 @@
         <div class="trust__stat-label">Frame Styles</div>
         <div class="trust__stat-desc">Curated from top global brands</div>
       </div>
-      <div class="trust__stat reveal reveal-delay-5">
+      <div class="trust__stat stagger-child">
         <div class="trust__stat-icon">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
         </div>

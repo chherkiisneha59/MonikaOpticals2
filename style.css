@@ -303,19 +303,17 @@ ul { list-style: none; }
   50%      { transform: translateY(-20px); }
 }
 
-/* Hero Image Gallery */
-.hero__gallery {
-  display: flex;
-  gap: 16px;
+/* Hero Image Gallery — infinite CSS scroll */
+.hero__gallery-wrap {
   width: calc(100% + 96px);
   margin: 0 -48px;
-  padding: 20px 48px;
   overflow: hidden;
   position: relative;
+  padding: 20px 0;
 }
 
-.hero__gallery::before,
-.hero__gallery::after {
+.hero__gallery-wrap::before,
+.hero__gallery-wrap::after {
   content: '';
   position: absolute;
   top: 0;
@@ -325,12 +323,12 @@ ul { list-style: none; }
   pointer-events: none;
 }
 
-.hero__gallery::before {
+.hero__gallery-wrap::before {
   left: 0;
   background: linear-gradient(90deg, var(--color-bg) 0%, transparent 100%);
 }
 
-.hero__gallery::after {
+.hero__gallery-wrap::after {
   right: 0;
   background: linear-gradient(270deg, var(--color-bg-section) 0%, transparent 100%);
 }
@@ -348,7 +346,7 @@ ul { list-style: none; }
 }
 
 .hero__gallery-card:hover {
-  transform: translateY(-4px);
+  transform: translateY(-4px) scale(1.03);
   box-shadow: var(--shadow-md);
 }
 
@@ -1140,12 +1138,33 @@ ul { list-style: none; }
 }
 
 /* ═══════════════════════════════════════
-   SCROLL ANIMATIONS (Intersection Observer)
+   SCROLL PROGRESS BAR
    ═══════════════════════════════════════ */
+.scroll-progress {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 3px;
+  width: 0%;
+  background: linear-gradient(90deg, var(--color-accent), var(--color-accent-light));
+  z-index: 10000;
+  transition: width 0.05s linear;
+  pointer-events: none;
+}
+
+/* ═══════════════════════════════════════
+   ENHANCED SCROLL ANIMATIONS
+   7 reveal types + stagger + delays
+   ═══════════════════════════════════════ */
+
+/* Base: fade up */
 .reveal {
   opacity: 0;
-  transform: translateY(40px);
-  transition: opacity 0.8s ease, transform 0.8s ease;
+  transform: translateY(50px);
+  transition: opacity 0.9s cubic-bezier(0.22, 1, 0.36, 1),
+              transform 0.9s cubic-bezier(0.22, 1, 0.36, 1),
+              filter 0.9s ease;
+  will-change: opacity, transform;
 }
 
 .reveal.visible {
@@ -1153,16 +1172,134 @@ ul { list-style: none; }
   transform: translateY(0);
 }
 
+/* Slide from left */
+.reveal-left {
+  opacity: 0;
+  transform: translateX(-80px);
+  transition: opacity 0.9s cubic-bezier(0.22, 1, 0.36, 1),
+              transform 0.9s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: opacity, transform;
+}
+
+.reveal-left.visible {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+/* Slide from right */
+.reveal-right {
+  opacity: 0;
+  transform: translateX(80px);
+  transition: opacity 0.9s cubic-bezier(0.22, 1, 0.36, 1),
+              transform 0.9s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: opacity, transform;
+}
+
+.reveal-right.visible {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+/* Scale up from center */
+.reveal-scale {
+  opacity: 0;
+  transform: scale(0.85);
+  transition: opacity 0.9s cubic-bezier(0.22, 1, 0.36, 1),
+              transform 0.9s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: opacity, transform;
+}
+
+.reveal-scale.visible {
+  opacity: 1;
+  transform: scale(1);
+}
+
+/* Blur in */
+.reveal-blur {
+  opacity: 0;
+  filter: blur(12px);
+  transform: translateY(20px);
+  transition: opacity 1s cubic-bezier(0.22, 1, 0.36, 1),
+              filter 1s cubic-bezier(0.22, 1, 0.36, 1),
+              transform 1s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: opacity, filter, transform;
+}
+
+.reveal-blur.visible {
+  opacity: 1;
+  filter: blur(0);
+  transform: translateY(0);
+}
+
+/* Rotate in */
+.reveal-rotate {
+  opacity: 0;
+  transform: rotate(-4deg) translateY(30px);
+  transition: opacity 0.9s cubic-bezier(0.22, 1, 0.36, 1),
+              transform 0.9s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: opacity, transform;
+}
+
+.reveal-rotate.visible {
+  opacity: 1;
+  transform: rotate(0) translateY(0);
+}
+
+/* Stagger children */
+.stagger-child {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: opacity 0.7s cubic-bezier(0.22, 1, 0.36, 1),
+              transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: opacity, transform;
+}
+
+.stagger-child.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Delay utilities */
 .reveal-delay-1 { transition-delay: 0.1s; }
 .reveal-delay-2 { transition-delay: 0.2s; }
 .reveal-delay-3 { transition-delay: 0.3s; }
 .reveal-delay-4 { transition-delay: 0.4s; }
 .reveal-delay-5 { transition-delay: 0.5s; }
 .reveal-delay-6 { transition-delay: 0.6s; }
+.reveal-delay-7 { transition-delay: 0.7s; }
+.reveal-delay-8 { transition-delay: 0.8s; }
 
 /* Counter animation */
 .count-up {
   display: inline-block;
+}
+
+/* ═══════════════════════════════════════
+   HERO GALLERY — infinite CSS scroll
+   ═══════════════════════════════════════ */
+.hero__gallery {
+  display: flex;
+  gap: 16px;
+  width: max-content;
+  margin: 0 -48px;
+  padding: 20px 0;
+  overflow: visible;
+  position: relative;
+  animation: heroGalleryScroll 35s linear infinite;
+}
+
+.hero__gallery:hover {
+  animation-play-state: paused;
+}
+
+@keyframes heroGalleryScroll {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+/* 3D Tilt hover */
+.tilt-hover {
+  transition: transform 0.2s ease;
 }
 
 /* ═══════════════════════════════════════

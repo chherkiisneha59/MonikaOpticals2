@@ -1,6 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════
    Monika Opticals — Glassmorphic Clone
-   All interactivity: scroll effects, counters, nav, marquees
+   Enhanced scroll animations, parallax, counters, nav, marquees
    ═══════════════════════════════════════════════════════════════ */
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -77,8 +77,14 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  /* ── Intersection Observer — Scroll Reveal ── */
-  const revealElements = document.querySelectorAll('.reveal');
+  /* ══════════════════════════════════════════════════════
+     ENHANCED SCROLL REVEAL SYSTEM
+     Supports: fade-up, fade-down, slide-left, slide-right,
+               scale-up, blur-in, rotate-in
+     ══════════════════════════════════════════════════════ */
+  const revealElements = document.querySelectorAll(
+    '.reveal, .reveal-left, .reveal-right, .reveal-scale, .reveal-blur, .reveal-rotate'
+  );
 
   const revealObserver = new IntersectionObserver((entries) => {
     entries.forEach(entry => {
@@ -88,31 +94,124 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
   }, {
-    threshold: 0.15,
-    rootMargin: '0px 0px -50px 0px'
+    threshold: 0.12,
+    rootMargin: '0px 0px -60px 0px'
   });
 
   revealElements.forEach(el => revealObserver.observe(el));
 
-  /* ── Count-Up Animation ── */
+  /* ══════════════════════════════════════════════════════
+     STAGGERED CHILDREN ANIMATION
+     Add .stagger-parent to a container and .stagger-child
+     to each child for cascading reveal
+     ══════════════════════════════════════════════════════ */
+  const staggerParents = document.querySelectorAll('.stagger-parent');
+
+  const staggerObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        const children = entry.target.querySelectorAll('.stagger-child');
+        children.forEach((child, i) => {
+          child.style.transitionDelay = `${i * 0.12}s`;
+          child.classList.add('visible');
+        });
+        staggerObserver.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.15 });
+
+  staggerParents.forEach(el => staggerObserver.observe(el));
+
+  /* ══════════════════════════════════════════════════════
+     PARALLAX SCROLL — images float at different rates
+     ══════════════════════════════════════════════════════ */
+  const parallaxElements = document.querySelectorAll('[data-parallax]');
+
+  let ticking = false;
+  const updateParallax = () => {
+    const scrollY = window.scrollY;
+    const viewH = window.innerHeight;
+
+    parallaxElements.forEach(el => {
+      const rect = el.getBoundingClientRect();
+      const speed = parseFloat(el.dataset.parallax) || 0.1;
+
+      if (rect.top < viewH && rect.bottom > 0) {
+        const travel = (rect.top - viewH / 2) * speed;
+        el.style.transform = `translateY(${travel}px)`;
+      }
+    });
+
+    // Decorative circles parallax
+    const circles = document.querySelectorAll('.hero__circle');
+    circles.forEach((circle, i) => {
+      const speed = (i + 1) * 0.1;
+      circle.style.transform = `translateY(${scrollY * speed}px)`;
+    });
+
+    ticking = false;
+  };
+
+  window.addEventListener('scroll', () => {
+    if (!ticking) {
+      requestAnimationFrame(updateParallax);
+      ticking = true;
+    }
+  }, { passive: true });
+
+  /* ══════════════════════════════════════════════════════
+     SMOOTH HERO GALLERY — infinite CSS-driven scroll
+     Uses duplicated content + CSS animation for silky movement
+     ══════════════════════════════════════════════════════ */
+  const heroGallery = document.querySelector('.hero__gallery');
+
+  if (heroGallery) {
+    // Duplicate gallery items for seamless loop
+    const items = heroGallery.innerHTML;
+    heroGallery.innerHTML = items + items;
+
+    // Pause animation on hover
+    heroGallery.addEventListener('mouseenter', () => {
+      heroGallery.style.animationPlayState = 'paused';
+    });
+    heroGallery.addEventListener('mouseleave', () => {
+      heroGallery.style.animationPlayState = 'running';
+    });
+  }
+
+  /* ══════════════════════════════════════════════════════
+     SCROLL PROGRESS BAR — thin accent bar at the top
+     ══════════════════════════════════════════════════════ */
+  const progressBar = document.createElement('div');
+  progressBar.className = 'scroll-progress';
+  document.body.prepend(progressBar);
+
+  const updateProgress = () => {
+    const scrollTop = window.scrollY;
+    const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+    const progress = docHeight > 0 ? (scrollTop / docHeight) * 100 : 0;
+    progressBar.style.width = `${progress}%`;
+  };
+
+  window.addEventListener('scroll', updateProgress, { passive: true });
+
+  /* ══════════════════════════════════════════════════════
+     COUNT-UP ANIMATION
+     ══════════════════════════════════════════════════════ */
   const countElements = document.querySelectorAll('.count-up');
   let countAnimated = false;
 
   const animateCount = (el) => {
     const target = parseInt(el.dataset.target, 10);
     const suffix = el.dataset.suffix || '';
-    const isFixed = el.dataset.fixed === 'true';
     const duration = 2000;
     const startTime = performance.now();
 
     const step = (currentTime) => {
       const elapsed = currentTime - startTime;
       const progress = Math.min(elapsed / duration, 1);
-
-      // Ease out cubic
       const eased = 1 - Math.pow(1 - progress, 3);
       const current = Math.round(eased * target);
-
       el.textContent = current + suffix;
 
       if (progress < 1) {
@@ -126,7 +225,6 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   const trustSection = document.getElementById('trust');
-
   if (trustSection) {
     const countObserver = new IntersectionObserver((entries) => {
       entries.forEach(entry => {
@@ -141,51 +239,28 @@ document.addEventListener('DOMContentLoaded', () => {
     countObserver.observe(trustSection);
   }
 
-  /* ── Hero Gallery Auto-Scroll (subtle parallax) ── */
-  const heroGallery = document.querySelector('.hero__gallery');
+  /* ══════════════════════════════════════════════════════
+     IMAGE TILT EFFECT — subtle 3D tilt on hover
+     Add .tilt-hover class to any image container
+     ══════════════════════════════════════════════════════ */
+  document.querySelectorAll('.tilt-hover').forEach(card => {
+    card.addEventListener('mousemove', (e) => {
+      const rect = card.getBoundingClientRect();
+      const x = (e.clientX - rect.left) / rect.width - 0.5;
+      const y = (e.clientY - rect.top) / rect.height - 0.5;
 
-  if (heroGallery) {
-    let scrollAmount = 0;
-    let autoScrollRAF = null;
-
-    const autoScroll = () => {
-      scrollAmount += 0.5;
-      if (scrollAmount >= heroGallery.scrollWidth - heroGallery.clientWidth) {
-        scrollAmount = 0;
-      }
-      heroGallery.scrollLeft = scrollAmount;
-      autoScrollRAF = requestAnimationFrame(autoScroll);
-    };
-
-    autoScrollRAF = requestAnimationFrame(autoScroll);
-
-    // Pause on hover
-    heroGallery.addEventListener('mouseenter', () => {
-      if (autoScrollRAF) cancelAnimationFrame(autoScrollRAF);
+      card.style.transform = `perspective(800px) rotateY(${x * 8}deg) rotateX(${-y * 8}deg) translateY(-4px)`;
     });
 
-    heroGallery.addEventListener('mouseleave', () => {
-      autoScrollRAF = requestAnimationFrame(autoScroll);
+    card.addEventListener('mouseleave', () => {
+      card.style.transform = 'perspective(800px) rotateY(0) rotateX(0) translateY(0)';
     });
-  }
-
-  /* ── Parallax scroll effect for decorative circles ── */
-  const circles = document.querySelectorAll('.hero__circle');
-
-  window.addEventListener('scroll', () => {
-    const scrollY = window.scrollY;
-    circles.forEach((circle, i) => {
-      const speed = (i + 1) * 0.15;
-      circle.style.transform = `translateY(${scrollY * speed}px)`;
-    });
-  }, { passive: true });
+  });
 
 });
 
-/* ── Global helper: Scroll to section ── */
+/* ── Global helper ── */
 function scrollToSection(id) {
   const el = document.getElementById(id);
-  if (el) {
-    el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  }
+  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
