@@ -1,42 +1,43 @@
 /* ═══════════════════════════════════════════════════════════════
    Monika Opticals — Collection Page Logic
    Product data, filtering, dynamic rendering, WhatsApp enquiry
+   Reads from localStorage backend (admin edits)
    ═══════════════════════════════════════════════════════════════ */
 
 const PRODUCTS = [
   // ── Sunglasses ──
-  { id: 'sun-1', name: 'Aviator Classic', brand: 'Ray-Ban', price: '₹4,990', category: 'sunglasses', image: 'images/products/sun-1.png', features: ['UV400 Protection', 'Polarized Lenses', 'Gold Metal Frame'], badge: 'Best Seller' },
-  { id: 'sun-2', name: 'Cat-Eye Noir', brand: 'Vincent Chase', price: '₹2,490', category: 'sunglasses', image: 'images/products/sun-2.png', features: ['UV Protection', 'Acetate Frame', 'Scratch Resistant'] },
-  { id: 'sun-3', name: 'Retro Round', brand: 'John Jacobs', price: '₹3,290', category: 'sunglasses', image: 'images/products/sun-3.png', features: ['Gradient Lenses', 'Tortoiseshell Frame', 'Lightweight'] },
-  { id: 'sun-4', name: 'Sport Wrap', brand: 'Oakley', price: '₹6,990', category: 'sunglasses', image: 'images/products/sun-4.png', features: ['Polarized', 'Impact Resistant', 'Wraparound Fit'], badge: 'Premium' },
-  { id: 'sun-5', name: 'Oversized Square', brand: 'Vogue', price: '₹3,790', category: 'sunglasses', image: 'images/products/sun-5.png', features: ['Brown Gradient', 'Full Rim', 'Fashion Forward'] },
+  { id: 'sun-1', name: 'Aviator Classic', brand: 'Ray-Ban', price: '₹4,990', category: 'sunglasses', image: 'images/products/sun-1.png', features: ['UV400 Protection', 'Polarized Lenses', 'Gold Metal Frame'], badge: 'Best Seller', colors: ['#FFD700', '#C0C0C0', '#1A1A1A'] },
+  { id: 'sun-2', name: 'Cat-Eye Noir', brand: 'Vincent Chase', price: '₹2,490', category: 'sunglasses', image: 'images/products/sun-2.png', features: ['UV Protection', 'Acetate Frame', 'Scratch Resistant'], colors: ['#1A1A1A', '#800080'] },
+  { id: 'sun-3', name: 'Retro Round', brand: 'John Jacobs', price: '₹3,290', category: 'sunglasses', image: 'images/products/sun-3.png', features: ['Gradient Lenses', 'Tortoiseshell Frame', 'Lightweight'], colors: ['#E8CDA0', '#1A1A1A'] },
+  { id: 'sun-4', name: 'Sport Wrap', brand: 'Oakley', price: '₹6,990', category: 'sunglasses', image: 'images/products/sun-4.png', features: ['Polarized', 'Impact Resistant', 'Wraparound Fit'], badge: 'Premium', colors: ['#1A1A1A', '#4169E1'] },
+  { id: 'sun-5', name: 'Oversized Square', brand: 'Vogue', price: '₹3,790', category: 'sunglasses', image: 'images/products/sun-5.png', features: ['Brown Gradient', 'Full Rim', 'Fashion Forward'], colors: ['#8B4513', '#1A1A1A'] },
 
   // ── Reading Glasses ──
-  { id: 'read-1', name: 'Executive Gold', brand: 'Titan Eyeplus', price: '₹2,190', category: 'reading', image: 'images/products/read-1.png', features: ['Anti-Glare Coating', 'Lightweight Gold Frame', 'Spring Hinges'], badge: 'Popular' },
-  { id: 'read-2', name: 'Scholar Half-Rim', brand: 'Lenskart', price: '₹1,490', category: 'reading', image: 'images/products/read-2.png', features: ['Silver Frame', 'Anti-Reflective', 'Comfortable Fit'] },
-  { id: 'read-3', name: 'Vintage Round', brand: 'John Jacobs', price: '₹1,990', category: 'reading', image: 'images/products/read-3.png', features: ['Tortoiseshell Acetate', 'Classic Design', 'Durable Build'] },
-  { id: 'read-4', name: 'Progressive Pro', brand: 'Bausch & Lomb', price: '₹3,490', category: 'reading', image: 'images/products/read-4.png', features: ['Progressive Lenses', 'Black Acetate', 'Multi-Focal'], badge: 'Advanced' },
+  { id: 'read-1', name: 'Executive Gold', brand: 'Titan Eyeplus', price: '₹2,190', category: 'reading', image: 'images/products/read-1.png', features: ['Anti-Glare Coating', 'Lightweight Gold Frame', 'Spring Hinges'], badge: 'Popular', colors: ['#FFD700', '#C0C0C0'] },
+  { id: 'read-2', name: 'Scholar Half-Rim', brand: 'Lenskart', price: '₹1,490', category: 'reading', image: 'images/products/read-2.png', features: ['Silver Frame', 'Anti-Reflective', 'Comfortable Fit'], colors: ['#C0C0C0', '#1A1A1A'] },
+  { id: 'read-3', name: 'Vintage Round', brand: 'John Jacobs', price: '₹1,990', category: 'reading', image: 'images/products/read-3.png', features: ['Tortoiseshell Acetate', 'Classic Design', 'Durable Build'], colors: ['#E8CDA0'] },
+  { id: 'read-4', name: 'Progressive Pro', brand: 'Bausch & Lomb', price: '₹3,490', category: 'reading', image: 'images/products/read-4.png', features: ['Progressive Lenses', 'Black Acetate', 'Multi-Focal'], badge: 'Advanced', colors: ['#1A1A1A'] },
 
   // ── Computer Glasses ──
-  { id: 'comp-1', name: 'Digital Shield', brand: 'Lenskart', price: '₹1,790', category: 'computer', image: 'images/products/comp-1.png', features: ['Blue-Light Filter', 'Anti-Glare', 'Transparent Frame'], badge: 'Top Rated' },
-  { id: 'comp-2', name: 'Code Master', brand: 'Vincent Chase', price: '₹1,990', category: 'computer', image: 'images/products/comp-2.png', features: ['Blue-Light Block', 'Matte Black Frame', 'Slight Yellow Tint'] },
-  { id: 'comp-3', name: 'Rose Circle', brand: 'John Jacobs', price: '₹2,490', category: 'computer', image: 'images/products/comp-3.png', features: ['Anti-Blue Light', 'Rose Gold Metal', 'Ultra Lightweight'] },
-  { id: 'comp-4', name: 'Office Elite', brand: 'Fastrack', price: '₹1,590', category: 'computer', image: 'images/products/comp-4.png', features: ['Anti-Reflective', 'Navy Acetate', 'Ergonomic Fit'] },
+  { id: 'comp-1', name: 'Digital Shield', brand: 'Lenskart', price: '₹1,790', category: 'computer', image: 'images/products/comp-1.png', features: ['Blue-Light Filter', 'Anti-Glare', 'Transparent Frame'], badge: 'Top Rated', colors: ['#FFFFFF', '#1A1A1A'] },
+  { id: 'comp-2', name: 'Code Master', brand: 'Vincent Chase', price: '₹1,990', category: 'computer', image: 'images/products/comp-2.png', features: ['Blue-Light Block', 'Matte Black Frame', 'Slight Yellow Tint'], colors: ['#1A1A1A'] },
+  { id: 'comp-3', name: 'Rose Circle', brand: 'John Jacobs', price: '₹2,490', category: 'computer', image: 'images/products/comp-3.png', features: ['Anti-Blue Light', 'Rose Gold Metal', 'Ultra Lightweight'], colors: ['#FF69B4', '#FFD700'] },
+  { id: 'comp-4', name: 'Office Elite', brand: 'Fastrack', price: '₹1,590', category: 'computer', image: 'images/products/comp-4.png', features: ['Anti-Reflective', 'Navy Acetate', 'Ergonomic Fit'], colors: ['#4169E1', '#1A1A1A'] },
 
   // ── Sports Eyewear ──
-  { id: 'sport-1', name: 'Aero Pro', brand: 'Oakley', price: '₹7,490', category: 'sports', image: 'images/products/sport-1.png', features: ['Polarized', 'Impact Resistant', 'Wraparound Design'], badge: 'Pro Choice' },
-  { id: 'sport-2', name: 'Velocity', brand: 'Oakley', price: '₹5,990', category: 'sports', image: 'images/products/sport-2.png', features: ['Mirrored Blue Lenses', 'White Frame', 'Cycling Optimized'] },
-  { id: 'sport-3', name: 'Trail Runner', brand: 'Fastrack', price: '₹3,290', category: 'sports', image: 'images/products/sport-3.png', features: ['Polarized Grey', 'Orange Frame', 'Ultra-Light'] },
+  { id: 'sport-1', name: 'Aero Pro', brand: 'Oakley', price: '₹7,490', category: 'sports', image: 'images/products/sport-1.png', features: ['Polarized', 'Impact Resistant', 'Wraparound Design'], badge: 'Pro Choice', colors: ['#1A1A1A', '#DC143C'] },
+  { id: 'sport-2', name: 'Velocity', brand: 'Oakley', price: '₹5,990', category: 'sports', image: 'images/products/sport-2.png', features: ['Mirrored Blue Lenses', 'White Frame', 'Cycling Optimized'], colors: ['#FFFFFF', '#4169E1'] },
+  { id: 'sport-3', name: 'Trail Runner', brand: 'Fastrack', price: '₹3,290', category: 'sports', image: 'images/products/sport-3.png', features: ['Polarized Grey', 'Orange Frame', 'Ultra-Light'], colors: ['#FF8C00', '#1A1A1A'] },
 
   // ── Kids Eyewear ──
-  { id: 'kids-1', name: 'Fun Purple', brand: 'Lenskart', price: '₹990', category: 'kids', image: 'images/products/kids-1.png', features: ['Flexible Frame', 'Scratch Proof', 'Fun Purple Color'], badge: 'Kid Fav' },
-  { id: 'kids-2', name: 'Tiny Scholar', brand: 'Titan Eyeplus', price: '₹1,190', category: 'kids', image: 'images/products/kids-2.png', features: ['Lightweight', 'Anti-Glare', 'Gold Frame'] },
-  { id: 'kids-3', name: 'Mini Round', brand: 'Vincent Chase', price: '₹890', category: 'kids', image: 'images/products/kids-3.png', features: ['Durable Build', 'Round Shape', 'Tortoiseshell'] },
+  { id: 'kids-1', name: 'Fun Purple', brand: 'Lenskart', price: '₹990', category: 'kids', image: 'images/products/kids-1.png', features: ['Flexible Frame', 'Scratch Proof', 'Fun Purple Color'], badge: 'Kid Fav', colors: ['#800080', '#FF69B4'] },
+  { id: 'kids-2', name: 'Tiny Scholar', brand: 'Titan Eyeplus', price: '₹1,190', category: 'kids', image: 'images/products/kids-2.png', features: ['Lightweight', 'Anti-Glare', 'Gold Frame'], colors: ['#FFD700'] },
+  { id: 'kids-3', name: 'Mini Round', brand: 'Vincent Chase', price: '₹890', category: 'kids', image: 'images/products/kids-3.png', features: ['Durable Build', 'Round Shape', 'Tortoiseshell'], colors: ['#E8CDA0'] },
 
   // ── Contact Lenses ──
-  { id: 'contact-1', name: 'Daily Fresh', brand: 'Bausch & Lomb', price: '₹799/box', category: 'contacts', image: 'images/products/contact-1.png', features: ['Daily Disposable', 'High Moisture', '30 Pack'], badge: 'Best Value' },
-  { id: 'contact-2', name: 'Monthly Comfort', brand: 'Bausch & Lomb', price: '₹1,290/pair', category: 'contacts', image: 'images/products/contact-2.png', features: ['Monthly Wear', 'UV Blocking', 'Breathable'] },
-  { id: 'contact-3', name: 'Toric Precision', brand: 'Bausch & Lomb', price: '₹1,590/pair', category: 'contacts', image: 'images/products/contact-3.png', features: ['For Astigmatism', 'Stable Fit', 'Clear Vision'], badge: 'Specialist' },
+  { id: 'contact-1', name: 'Daily Fresh', brand: 'Bausch & Lomb', price: '₹799/box', category: 'contacts', image: 'images/products/contact-1.png', features: ['Daily Disposable', 'High Moisture', '30 Pack'], badge: 'Best Value', colors: [] },
+  { id: 'contact-2', name: 'Monthly Comfort', brand: 'Bausch & Lomb', price: '₹1,290/pair', category: 'contacts', image: 'images/products/contact-2.png', features: ['Monthly Wear', 'UV Blocking', 'Breathable'], colors: [] },
+  { id: 'contact-3', name: 'Toric Precision', brand: 'Bausch & Lomb', price: '₹1,590/pair', category: 'contacts', image: 'images/products/contact-3.png', features: ['For Astigmatism', 'Stable Fit', 'Clear Vision'], badge: 'Specialist', colors: [] },
 ];
 
 const CATEGORY_META = {
@@ -48,6 +49,18 @@ const CATEGORY_META = {
   kids:       { title: 'Kids Eyewear', desc: 'Durable and fun frames for young eyes. Flexible, colorful, and built to withstand active play.' },
   contacts:   { title: 'Contact Lenses', desc: 'Comfortable daily and monthly contact lenses from Bausch & Lomb. Available in daily, monthly, and toric.' },
 };
+
+/* Helper: get color name */
+function getColorName(hex) {
+  const names = {
+    '#1A1A1A': 'Black', '#C0C0C0': 'Silver', '#FFD700': 'Gold',
+    '#B87333': 'Copper', '#8B4513': 'Brown', '#4169E1': 'Blue',
+    '#DC143C': 'Red', '#228B22': 'Green', '#FF69B4': 'Pink',
+    '#800080': 'Purple', '#FF8C00': 'Orange', '#FFFFFF': 'White',
+    '#F5F5DC': 'Cream', '#808080': 'Grey', '#E8CDA0': 'Tortoiseshell'
+  };
+  return names[hex?.toUpperCase?.()] || hex || '';
+}
 
 document.addEventListener('DOMContentLoaded', () => {
   const grid = document.getElementById('products-grid');
@@ -64,6 +77,9 @@ document.addEventListener('DOMContentLoaded', () => {
       if (Array.isArray(parsed) && parsed.length > 0) activeProducts = parsed;
     } catch (e) { /* fall back to hardcoded */ }
   }
+
+  // Filter out hidden products (admin visibility control)
+  activeProducts = activeProducts.filter(p => p.visible !== false);
 
   // Read category from URL
   const params = new URLSearchParams(window.location.search);
@@ -132,6 +148,23 @@ document.addEventListener('DOMContentLoaded', () => {
         dotsHTML += '</div>';
       }
 
+      // Color dots
+      const colors = Array.isArray(product.colors) ? product.colors : [];
+      let colorsHTML = '';
+      if (colors.length > 0) {
+        colorsHTML = '<div class="product-card__colors">';
+        colors.forEach(c => {
+          const style = c === '#E8CDA0'
+            ? 'background:linear-gradient(135deg,#E8CDA0,#8B4513,#E8CDA0);'
+            : `background:${c};`;
+          const borderStyle = (c === '#FFFFFF' || c === '#F5F5DC')
+            ? 'border:1px solid rgba(0,0,0,0.15);'
+            : '';
+          colorsHTML += `<span class="product-card__color-dot" style="${style}${borderStyle}" title="${getColorName(c)}"></span>`;
+        });
+        colorsHTML += '</div>';
+      }
+
       const whatsappMsg = encodeURIComponent(`Hi, I'm interested in the ${product.name} (${product.brand}) - ${product.price}. Can I get more details?`);
 
       card.innerHTML = `
@@ -143,6 +176,7 @@ document.addEventListener('DOMContentLoaded', () => {
         <div class="product-card__body">
           <span class="product-card__brand">${product.brand}</span>
           <h3 class="product-card__name">${product.name}</h3>
+          ${colorsHTML}
           <div class="product-card__tags">${featuresHTML}</div>
           <div class="product-card__footer">
             <span class="product-card__price">${product.price}</span>

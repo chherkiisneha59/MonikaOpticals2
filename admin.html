@@ -48,71 +48,135 @@
       </div>
     </header>
 
-    <!-- Stats Row -->
-    <div class="admin-stats" id="admin-stats">
-      <!-- Injected by JS -->
+    <!-- ═══ TAB NAVIGATION ═══ -->
+    <div class="admin-tabs" id="admin-tabs">
+      <button class="admin-tab active" data-tab="products">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+        Products
+      </button>
+      <button class="admin-tab" data-tab="banners">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+        Banner Manager
+      </button>
+      <button class="admin-tab" data-tab="display">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+        Display Control
+      </button>
     </div>
 
-    <!-- Toolbar -->
-    <div class="admin-toolbar">
-      <div class="admin-toolbar__left">
-        <div class="admin-search-wrap">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-          <input type="text" id="admin-search" placeholder="Search products..." class="admin-search" />
+    <!-- ═══ PRODUCTS TAB ═══ -->
+    <div class="admin-tab-content active" id="tab-products">
+      <!-- Stats Row -->
+      <div class="admin-stats" id="admin-stats">
+        <!-- Injected by JS -->
+      </div>
+
+      <!-- Toolbar -->
+      <div class="admin-toolbar">
+        <div class="admin-toolbar__left">
+          <div class="admin-search-wrap">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="text" id="admin-search" placeholder="Search products..." class="admin-search" />
+          </div>
+          <select id="admin-cat-filter" class="admin-select">
+            <option value="all">All Categories</option>
+            <option value="sunglasses">Sunglasses</option>
+            <option value="reading">Reading</option>
+            <option value="computer">Computer</option>
+            <option value="sports">Sports</option>
+            <option value="kids">Kids</option>
+            <option value="contacts">Contacts</option>
+          </select>
         </div>
-        <select id="admin-cat-filter" class="admin-select">
-          <option value="all">All Categories</option>
-          <option value="sunglasses">Sunglasses</option>
-          <option value="reading">Reading</option>
-          <option value="computer">Computer</option>
-          <option value="sports">Sports</option>
-          <option value="kids">Kids</option>
-          <option value="contacts">Contacts</option>
-        </select>
+        <div class="admin-toolbar__right">
+          <button class="admin-btn admin-btn--ghost" id="export-btn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Export
+          </button>
+          <label class="admin-btn admin-btn--ghost" for="import-file">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            Import
+          </label>
+          <input type="file" id="import-file" accept=".json" style="display:none;" />
+          <button class="admin-btn admin-btn--danger-ghost" id="reset-btn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
+            Reset Defaults
+          </button>
+          <button class="admin-btn admin-btn--primary" id="add-product-btn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Add Product
+          </button>
+        </div>
       </div>
-      <div class="admin-toolbar__right">
-        <button class="admin-btn admin-btn--ghost" id="export-btn">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-          Export
-        </button>
-        <label class="admin-btn admin-btn--ghost" for="import-file">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-          Import
-        </label>
-        <input type="file" id="import-file" accept=".json" style="display:none;" />
-        <button class="admin-btn admin-btn--danger-ghost" id="reset-btn">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
-          Reset Defaults
-        </button>
-        <button class="admin-btn admin-btn--primary" id="add-product-btn">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-          Add Product
-        </button>
+
+      <!-- Product Table -->
+      <div class="admin-table-wrap">
+        <table class="admin-table" id="admin-table">
+          <thead>
+            <tr>
+              <th>Image</th>
+              <th>Name</th>
+              <th>Brand</th>
+              <th>Category</th>
+              <th>Price</th>
+              <th>Colors</th>
+              <th>Badge</th>
+              <th>Visible</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="admin-tbody">
+            <!-- Injected by JS -->
+          </tbody>
+        </table>
+        <div class="admin-empty" id="admin-empty" style="display:none;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+          <p>No products found</p>
+        </div>
       </div>
     </div>
 
-    <!-- Product Table -->
-    <div class="admin-table-wrap">
-      <table class="admin-table" id="admin-table">
-        <thead>
-          <tr>
-            <th>Image</th>
-            <th>Name</th>
-            <th>Brand</th>
-            <th>Category</th>
-            <th>Price</th>
-            <th>Badge</th>
-            <th>Features</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody id="admin-tbody">
-          <!-- Injected by JS -->
-        </tbody>
-      </table>
-      <div class="admin-empty" id="admin-empty" style="display:none;">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
-        <p>No products found</p>
+    <!-- ═══ BANNER MANAGER TAB ═══ -->
+    <div class="admin-tab-content" id="tab-banners">
+      <div class="admin-section-header">
+        <div>
+          <h2 class="admin-section-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+            Hero Banner Images
+          </h2>
+          <p class="admin-section-desc">Manage the scrolling hero gallery on the homepage. Drag to reorder, toggle visibility.</p>
+        </div>
+        <button class="admin-btn admin-btn--primary" id="add-banner-btn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Add Banner Image
+        </button>
+        <input type="file" id="banner-file-input" accept="image/*" multiple style="display:none;" />
+      </div>
+
+      <div class="admin-banner-grid" id="banner-grid">
+        <!-- Injected by JS -->
+      </div>
+
+      <div class="admin-banner-empty" id="banner-empty" style="display:none;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+        <p>No banner images added yet</p>
+      </div>
+    </div>
+
+    <!-- ═══ DISPLAY CONTROL TAB ═══ -->
+    <div class="admin-tab-content" id="tab-display">
+      <div class="admin-section-header">
+        <div>
+          <h2 class="admin-section-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            Display Control
+          </h2>
+          <p class="admin-section-desc">Toggle which products appear on the storefront. Hidden products won't show in the collection page.</p>
+        </div>
+      </div>
+
+      <div class="admin-display-grid" id="display-grid">
+        <!-- Injected by JS -->
       </div>
     </div>
   </div>
@@ -165,6 +229,37 @@
           <div class="admin-input-group">
             <label for="prod-features">Features (comma separated) *</label>
             <input type="text" id="prod-features" placeholder="e.g. UV400, Polarized, Gold Frame" required />
+          </div>
+        </div>
+
+        <!-- Frame Colors -->
+        <div class="admin-input-group">
+          <label>Frame Colors <small style="color:rgba(255,255,255,0.3);font-weight:400;">(click to add available colors)</small></label>
+          <div class="admin-color-picker" id="color-picker">
+            <div class="admin-color-presets" id="color-presets">
+              <button type="button" class="admin-color-swatch" data-color="#1A1A1A" title="Black" style="background:#1A1A1A;"></button>
+              <button type="button" class="admin-color-swatch" data-color="#C0C0C0" title="Silver" style="background:#C0C0C0;"></button>
+              <button type="button" class="admin-color-swatch" data-color="#FFD700" title="Gold" style="background:#FFD700;"></button>
+              <button type="button" class="admin-color-swatch" data-color="#B87333" title="Copper" style="background:#B87333;"></button>
+              <button type="button" class="admin-color-swatch" data-color="#8B4513" title="Brown" style="background:#8B4513;"></button>
+              <button type="button" class="admin-color-swatch" data-color="#4169E1" title="Blue" style="background:#4169E1;"></button>
+              <button type="button" class="admin-color-swatch" data-color="#DC143C" title="Red" style="background:#DC143C;"></button>
+              <button type="button" class="admin-color-swatch" data-color="#228B22" title="Green" style="background:#228B22;"></button>
+              <button type="button" class="admin-color-swatch" data-color="#FF69B4" title="Pink" style="background:#FF69B4;"></button>
+              <button type="button" class="admin-color-swatch" data-color="#800080" title="Purple" style="background:#800080;"></button>
+              <button type="button" class="admin-color-swatch" data-color="#FF8C00" title="Orange" style="background:#FF8C00;"></button>
+              <button type="button" class="admin-color-swatch" data-color="#FFFFFF" title="White" style="background:#FFFFFF;"></button>
+              <button type="button" class="admin-color-swatch" data-color="#F5F5DC" title="Cream" style="background:#F5F5DC;"></button>
+              <button type="button" class="admin-color-swatch" data-color="#808080" title="Grey" style="background:#808080;"></button>
+              <button type="button" class="admin-color-swatch" data-color="#E8CDA0" title="Tortoiseshell" style="background:linear-gradient(135deg,#E8CDA0,#8B4513,#E8CDA0);"></button>
+              <button type="button" class="admin-color-swatch admin-color-swatch--custom" data-color="custom" title="Custom Color">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              </button>
+            </div>
+            <input type="color" id="custom-color-input" style="display:none;" />
+            <div class="admin-selected-colors" id="selected-colors">
+              <!-- Selected color circles injected by JS -->
+            </div>
           </div>
         </div>
 
