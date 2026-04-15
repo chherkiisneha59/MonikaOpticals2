@@ -1,0 +1,7 @@
+[
+  { "id": "b1", "src": "images/hero-1.png", "alt": "Round Metal Eyeglasses", "visible": true },
+  { "id": "b2", "src": "images/hero-2.png", "alt": "Sunglasses Collection", "visible": true },
+  { "id": "b3", "src": "images/hero-3.png", "alt": "Premium Sunglasses", "visible": true },
+  { "id": "b4", "src": "images/hero-4.png", "alt": "Wire Frame Glasses", "visible": true },
+  { "id": "b5", "src": "images/hero-5.png", "alt": "Tortoiseshell Glasses", "visible": true }
+]

@@ -3,7 +3,7 @@
    Enhanced scroll animations, parallax, counters, nav, marquees
    ═══════════════════════════════════════════════════════════════ */
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
 
   /* ── Navbar scroll effect ── */
   const navbar = document.getElementById('navbar');
@@ -162,24 +162,24 @@ document.addEventListener('DOMContentLoaded', () => {
   /* ══════════════════════════════════════════════════════
      SMOOTH HERO GALLERY — infinite CSS-driven scroll
      Uses duplicated content + CSS animation for silky movement
-     Dynamically loads banners from admin backend (localStorage)
+     Dynamically loads banners from persistent API backend
      ══════════════════════════════════════════════════════ */
   const heroGallery = document.querySelector('.hero__gallery');
 
   if (heroGallery) {
-    // Load banner images from admin backend
-    const bannerStored = localStorage.getItem('monika_opticals_banners');
-    if (bannerStored) {
-      try {
-        const banners = JSON.parse(bannerStored);
+    // Load banner images from persistent backend API
+    try {
+      const res = await fetch('/api/banners');
+      if (res.ok) {
+        const banners = await res.json();
         const visibleBanners = banners.filter(b => b.visible !== false);
         if (visibleBanners.length > 0) {
           heroGallery.innerHTML = visibleBanners.map(b =>
             `<div class="hero__gallery-card"><img src="${b.src}" alt="${b.alt || 'Eyewear'}" /></div>`
           ).join('');
         }
-      } catch (e) { /* fall back to original HTML content */ }
-    }
+      }
+    } catch (e) { /* server offline — use original HTML content */ }
 
     // Duplicate gallery items for seamless loop
     const items = heroGallery.innerHTML;

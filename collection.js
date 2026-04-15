@@ -62,21 +62,21 @@ function getColorName(hex) {
   return names[hex?.toUpperCase?.()] || hex || '';
 }
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
   const grid = document.getElementById('products-grid');
   const titleEl = document.getElementById('col-title');
   const descEl = document.getElementById('col-desc');
   const filterBtns = document.querySelectorAll('.col-filter-btn');
 
-  // Load products: prefer localStorage (admin edits) over hardcoded defaults
+  // Load products from API (persistent backend) → fallback to hardcoded defaults
   let activeProducts = PRODUCTS;
-  const stored = localStorage.getItem('monika_opticals_products');
-  if (stored) {
-    try {
-      const parsed = JSON.parse(stored);
-      if (Array.isArray(parsed) && parsed.length > 0) activeProducts = parsed;
-    } catch (e) { /* fall back to hardcoded */ }
-  }
+  try {
+    const res = await fetch('/api/products');
+    if (res.ok) {
+      const data = await res.json();
+      if (Array.isArray(data) && data.length > 0) activeProducts = data;
+    }
+  } catch (e) { /* server offline — use hardcoded defaults */ }
 
   // Filter out hidden products (admin visibility control)
   activeProducts = activeProducts.filter(p => p.visible !== false);
