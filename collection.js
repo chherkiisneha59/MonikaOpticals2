@@ -1,44 +1,8 @@
 /* ═══════════════════════════════════════════════════════════════
    Monika Opticals — Collection Page Logic
-   Product data, filtering, dynamic rendering, WhatsApp enquiry
-   Reads from localStorage backend (admin edits)
+   Product data loaded from persistent backend API (admin managed)
+   Only shows products the admin has added/uploaded
    ═══════════════════════════════════════════════════════════════ */
-
-const PRODUCTS = [
-  // ── Sunglasses ──
-  { id: 'sun-1', name: 'Aviator Classic', brand: 'Ray-Ban', price: '₹4,990', category: 'sunglasses', image: 'images/products/sun-1.png', features: ['UV400 Protection', 'Polarized Lenses', 'Gold Metal Frame'], badge: 'Best Seller', colors: ['#FFD700', '#C0C0C0', '#1A1A1A'] },
-  { id: 'sun-2', name: 'Cat-Eye Noir', brand: 'Vincent Chase', price: '₹2,490', category: 'sunglasses', image: 'images/products/sun-2.png', features: ['UV Protection', 'Acetate Frame', 'Scratch Resistant'], colors: ['#1A1A1A', '#800080'] },
-  { id: 'sun-3', name: 'Retro Round', brand: 'John Jacobs', price: '₹3,290', category: 'sunglasses', image: 'images/products/sun-3.png', features: ['Gradient Lenses', 'Tortoiseshell Frame', 'Lightweight'], colors: ['#E8CDA0', '#1A1A1A'] },
-  { id: 'sun-4', name: 'Sport Wrap', brand: 'Oakley', price: '₹6,990', category: 'sunglasses', image: 'images/products/sun-4.png', features: ['Polarized', 'Impact Resistant', 'Wraparound Fit'], badge: 'Premium', colors: ['#1A1A1A', '#4169E1'] },
-  { id: 'sun-5', name: 'Oversized Square', brand: 'Vogue', price: '₹3,790', category: 'sunglasses', image: 'images/products/sun-5.png', features: ['Brown Gradient', 'Full Rim', 'Fashion Forward'], colors: ['#8B4513', '#1A1A1A'] },
-
-  // ── Reading Glasses ──
-  { id: 'read-1', name: 'Executive Gold', brand: 'Titan Eyeplus', price: '₹2,190', category: 'reading', image: 'images/products/read-1.png', features: ['Anti-Glare Coating', 'Lightweight Gold Frame', 'Spring Hinges'], badge: 'Popular', colors: ['#FFD700', '#C0C0C0'] },
-  { id: 'read-2', name: 'Scholar Half-Rim', brand: 'Lenskart', price: '₹1,490', category: 'reading', image: 'images/products/read-2.png', features: ['Silver Frame', 'Anti-Reflective', 'Comfortable Fit'], colors: ['#C0C0C0', '#1A1A1A'] },
-  { id: 'read-3', name: 'Vintage Round', brand: 'John Jacobs', price: '₹1,990', category: 'reading', image: 'images/products/read-3.png', features: ['Tortoiseshell Acetate', 'Classic Design', 'Durable Build'], colors: ['#E8CDA0'] },
-  { id: 'read-4', name: 'Progressive Pro', brand: 'Bausch & Lomb', price: '₹3,490', category: 'reading', image: 'images/products/read-4.png', features: ['Progressive Lenses', 'Black Acetate', 'Multi-Focal'], badge: 'Advanced', colors: ['#1A1A1A'] },
-
-  // ── Computer Glasses ──
-  { id: 'comp-1', name: 'Digital Shield', brand: 'Lenskart', price: '₹1,790', category: 'computer', image: 'images/products/comp-1.png', features: ['Blue-Light Filter', 'Anti-Glare', 'Transparent Frame'], badge: 'Top Rated', colors: ['#FFFFFF', '#1A1A1A'] },
-  { id: 'comp-2', name: 'Code Master', brand: 'Vincent Chase', price: '₹1,990', category: 'computer', image: 'images/products/comp-2.png', features: ['Blue-Light Block', 'Matte Black Frame', 'Slight Yellow Tint'], colors: ['#1A1A1A'] },
-  { id: 'comp-3', name: 'Rose Circle', brand: 'John Jacobs', price: '₹2,490', category: 'computer', image: 'images/products/comp-3.png', features: ['Anti-Blue Light', 'Rose Gold Metal', 'Ultra Lightweight'], colors: ['#FF69B4', '#FFD700'] },
-  { id: 'comp-4', name: 'Office Elite', brand: 'Fastrack', price: '₹1,590', category: 'computer', image: 'images/products/comp-4.png', features: ['Anti-Reflective', 'Navy Acetate', 'Ergonomic Fit'], colors: ['#4169E1', '#1A1A1A'] },
-
-  // ── Sports Eyewear ──
-  { id: 'sport-1', name: 'Aero Pro', brand: 'Oakley', price: '₹7,490', category: 'sports', image: 'images/products/sport-1.png', features: ['Polarized', 'Impact Resistant', 'Wraparound Design'], badge: 'Pro Choice', colors: ['#1A1A1A', '#DC143C'] },
-  { id: 'sport-2', name: 'Velocity', brand: 'Oakley', price: '₹5,990', category: 'sports', image: 'images/products/sport-2.png', features: ['Mirrored Blue Lenses', 'White Frame', 'Cycling Optimized'], colors: ['#FFFFFF', '#4169E1'] },
-  { id: 'sport-3', name: 'Trail Runner', brand: 'Fastrack', price: '₹3,290', category: 'sports', image: 'images/products/sport-3.png', features: ['Polarized Grey', 'Orange Frame', 'Ultra-Light'], colors: ['#FF8C00', '#1A1A1A'] },
-
-  // ── Kids Eyewear ──
-  { id: 'kids-1', name: 'Fun Purple', brand: 'Lenskart', price: '₹990', category: 'kids', image: 'images/products/kids-1.png', features: ['Flexible Frame', 'Scratch Proof', 'Fun Purple Color'], badge: 'Kid Fav', colors: ['#800080', '#FF69B4'] },
-  { id: 'kids-2', name: 'Tiny Scholar', brand: 'Titan Eyeplus', price: '₹1,190', category: 'kids', image: 'images/products/kids-2.png', features: ['Lightweight', 'Anti-Glare', 'Gold Frame'], colors: ['#FFD700'] },
-  { id: 'kids-3', name: 'Mini Round', brand: 'Vincent Chase', price: '₹890', category: 'kids', image: 'images/products/kids-3.png', features: ['Durable Build', 'Round Shape', 'Tortoiseshell'], colors: ['#E8CDA0'] },
-
-  // ── Contact Lenses ──
-  { id: 'contact-1', name: 'Daily Fresh', brand: 'Bausch & Lomb', price: '₹799/box', category: 'contacts', image: 'images/products/contact-1.png', features: ['Daily Disposable', 'High Moisture', '30 Pack'], badge: 'Best Value', colors: [] },
-  { id: 'contact-2', name: 'Monthly Comfort', brand: 'Bausch & Lomb', price: '₹1,290/pair', category: 'contacts', image: 'images/products/contact-2.png', features: ['Monthly Wear', 'UV Blocking', 'Breathable'], colors: [] },
-  { id: 'contact-3', name: 'Toric Precision', brand: 'Bausch & Lomb', price: '₹1,590/pair', category: 'contacts', image: 'images/products/contact-3.png', features: ['For Astigmatism', 'Stable Fit', 'Clear Vision'], badge: 'Specialist', colors: [] },
-];
 
 const CATEGORY_META = {
   all:        { title: 'All Eyewear', desc: 'Browse our full range of premium eyewear, precision-fitted using our special automatic machines.' },
@@ -68,15 +32,15 @@ document.addEventListener('DOMContentLoaded', async () => {
   const descEl = document.getElementById('col-desc');
   const filterBtns = document.querySelectorAll('.col-filter-btn');
 
-  // Load products from API (persistent backend) → fallback to hardcoded defaults
-  let activeProducts = PRODUCTS;
+  // Load products ONLY from the backend API (admin-managed)
+  let activeProducts = [];
   try {
     const res = await fetch('/api/products');
     if (res.ok) {
       const data = await res.json();
-      if (Array.isArray(data) && data.length > 0) activeProducts = data;
+      if (Array.isArray(data)) activeProducts = data;
     }
-  } catch (e) { /* server offline — use hardcoded defaults */ }
+  } catch (e) { /* server offline — show empty */ }
 
   // Filter out hidden products (admin visibility control)
   activeProducts = activeProducts.filter(p => p.visible !== false);
@@ -114,6 +78,17 @@ document.addEventListener('DOMContentLoaded', async () => {
     const filtered = cat === 'all' ? activeProducts : activeProducts.filter(p => p.category === cat);
 
     grid.innerHTML = '';
+
+    if (filtered.length === 0) {
+      grid.innerHTML = `
+        <div style="grid-column:1/-1;text-align:center;padding:60px 20px;color:var(--color-text-muted);">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width:48px;height:48px;margin:0 auto 16px;display:block;opacity:0.3;"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+          <p style="font-size:1.1rem;font-weight:600;margin-bottom:6px;">No products available</p>
+          <p style="font-size:0.88rem;opacity:0.6;">Products will appear here once added by the admin.</p>
+        </div>
+      `;
+      return;
+    }
 
     // Helper: get images array (backward compat)
     function getImages(p) {
