@@ -1,0 +1,20 @@
+{
+  "name": "monika-opticals",
+  "version": "1.0.0",
+  "description": "Monika Opticals — Admin Backend Server",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/aayush1574/MonikaOpticals2.git"
+  },
+  "author": "aayush1574",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^5.2.1",
+    "multer": "^2.1.1"
+  }
+}

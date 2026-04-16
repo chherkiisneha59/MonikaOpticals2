@@ -1,22 +1,10 @@
 /* ═══════════════════════════════════════════════════════════════
-   Monika Opticals — Admin Panel Backend
-   Full CRUD, Banner Manager, Display Control, Frame Colors,
-   Multi-image upload, PERSISTENT JSON file storage via API
+   Monika Opticals — Admin Panel Frontend
+   Full CRUD, Banner Manager, Display Control, Frame Colors
+   Uses Express REST API backend with Multer file uploads
    ═══════════════════════════════════════════════════════════════ */
 
 const ADMIN_PASSWORD = 'monika1980';
-const API_BASE = '/api';
-
-/* ── Default product catalog (empty — admin uploads everything) ── */
-const DEFAULT_PRODUCTS = [];
-
-const DEFAULT_BANNERS = [
-  { id: 'b1', src: 'images/hero-1.png', alt: 'Round Metal Eyeglasses', visible: true },
-  { id: 'b2', src: 'images/hero-2.png', alt: 'Sunglasses Collection', visible: true },
-  { id: 'b3', src: 'images/hero-3.png', alt: 'Premium Sunglasses', visible: true },
-  { id: 'b4', src: 'images/hero-4.png', alt: 'Wire Frame Glasses', visible: true },
-  { id: 'b5', src: 'images/hero-5.png', alt: 'Tortoiseshell Glasses', visible: true },
-];
 
 const CATEGORY_LABELS = {
   sunglasses: 'Sunglasses', reading: 'Reading', computer: 'Computer',
@@ -29,73 +17,42 @@ const CATEGORY_LABELS = {
 let products = [];
 let banners = [];
 let deleteTargetId = null;
-let currentImages = [];
+let currentImages = [];      // { src: string, isNew: bool, file?: File }
 let currentColors = [];
 
 /* ══════════════════════════════════════════════════════════
-   API HELPERS — Save to server (persistent JSON files)
+   HELPERS
    ══════════════════════════════════════════════════════════ */
-async function apiGet(endpoint) {
-  try {
-    const res = await fetch(`${API_BASE}/${endpoint}`);
-    if (res.ok) return await res.json();
-  } catch (e) { /* server offline, use defaults */ }
-  return null;
-}
-
-async function apiPost(endpoint, data) {
-  try {
-    const res = await fetch(`${API_BASE}/${endpoint}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data)
-    });
-    if (res.ok) return await res.json();
-  } catch (e) {
-    showToast('Server offline — changes saved locally only.', 'error');
-  }
-  return null;
-}
-
-/* Helper: get images array from product (backward compat) */
-function getProductImages(product) {
-  if (Array.isArray(product.images) && product.images.length > 0) return product.images;
-  if (product.image) return [product.image];
-  return [];
-}
-
-function getProductColors(product) {
-  return Array.isArray(product.colors) ? product.colors : [];
-}
-
 function getColorName(hex) {
-  const colorNames = {
+  const names = {
     '#1A1A1A': 'Black', '#C0C0C0': 'Silver', '#FFD700': 'Gold',
     '#B87333': 'Copper', '#8B4513': 'Brown', '#4169E1': 'Blue',
     '#DC143C': 'Red', '#228B22': 'Green', '#FF69B4': 'Pink',
     '#800080': 'Purple', '#FF8C00': 'Orange', '#FFFFFF': 'White',
     '#F5F5DC': 'Cream', '#808080': 'Grey', '#E8CDA0': 'Tortoiseshell'
   };
-  return colorNames[hex.toUpperCase()] || hex;
+  return names[hex.toUpperCase()] || hex;
+}
+
+function getProductImages(p) {
+  if (Array.isArray(p.images) && p.images.length > 0) return p.images;
+  if (p.image) return [p.image];
+  return [];
+}
+
+function getProductColors(p) {
+  return Array.isArray(p.colors) ? p.colors : [];
 }
 
 /* ══════════════════════════════════════════════════════════
    INIT
    ══════════════════════════════════════════════════════════ */
 document.addEventListener('DOMContentLoaded', () => {
-  if (sessionStorage.getItem('monika_admin_auth') === 'true') {
-    showDashboard();
-  }
+  if (sessionStorage.getItem('monika_admin_auth') === 'true') showDashboard();
 
   document.getElementById('login-btn').addEventListener('click', handleLogin);
-  document.getElementById('admin-password').addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') handleLogin();
-  });
-
-  document.getElementById('logout-btn').addEventListener('click', () => {
-    sessionStorage.removeItem('monika_admin_auth');
-    location.reload();
-  });
+  document.getElementById('admin-password').addEventListener('keydown', e => { if (e.key === 'Enter') handleLogin(); });
+  document.getElementById('logout-btn').addEventListener('click', () => { sessionStorage.removeItem('monika_admin_auth'); location.reload(); });
 
   document.querySelectorAll('.admin-tab').forEach(tab => {
     tab.addEventListener('click', () => switchTab(tab.dataset.tab));
@@ -104,28 +61,20 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('add-product-btn').addEventListener('click', () => openProductModal());
   document.getElementById('modal-close').addEventListener('click', closeProductModal);
   document.getElementById('modal-cancel').addEventListener('click', closeProductModal);
-  document.getElementById('product-modal-overlay').addEventListener('click', (e) => {
-    if (e.target === e.currentTarget) closeProductModal();
-  });
+  document.getElementById('product-modal-overlay').addEventListener('click', e => { if (e.target === e.currentTarget) closeProductModal(); });
 
   document.getElementById('product-form').addEventListener('submit', handleFormSubmit);
 
   document.getElementById('delete-modal-close').addEventListener('click', closeDeleteModal);
   document.getElementById('delete-cancel').addEventListener('click', closeDeleteModal);
   document.getElementById('delete-confirm').addEventListener('click', confirmDelete);
-  document.getElementById('delete-modal-overlay').addEventListener('click', (e) => {
-    if (e.target === e.currentTarget) closeDeleteModal();
-  });
+  document.getElementById('delete-modal-overlay').addEventListener('click', e => { if (e.target === e.currentTarget) closeDeleteModal(); });
 
-  document.getElementById('reset-btn').addEventListener('click', () => {
-    document.getElementById('reset-modal-overlay').classList.add('active');
-  });
+  document.getElementById('reset-btn').addEventListener('click', () => document.getElementById('reset-modal-overlay').classList.add('active'));
   document.getElementById('reset-modal-close').addEventListener('click', closeResetModal);
   document.getElementById('reset-cancel').addEventListener('click', closeResetModal);
   document.getElementById('reset-confirm').addEventListener('click', confirmReset);
-  document.getElementById('reset-modal-overlay').addEventListener('click', (e) => {
-    if (e.target === e.currentTarget) closeResetModal();
-  });
+  document.getElementById('reset-modal-overlay').addEventListener('click', e => { if (e.target === e.currentTarget) closeResetModal(); });
 
   document.getElementById('admin-search').addEventListener('input', renderTable);
   document.getElementById('admin-cat-filter').addEventListener('change', renderTable);
@@ -145,7 +94,6 @@ function switchTab(tabName) {
   document.querySelectorAll('.admin-tab-content').forEach(c => c.classList.remove('active'));
   document.querySelector(`.admin-tab[data-tab="${tabName}"]`).classList.add('active');
   document.getElementById(`tab-${tabName}`).classList.add('active');
-
   if (tabName === 'banners') renderBanners();
   if (tabName === 'display') renderDisplayGrid();
 }
@@ -155,13 +103,11 @@ function switchTab(tabName) {
    ══════════════════════════════════════════════════════════ */
 function handleLogin() {
   const pwd = document.getElementById('admin-password').value;
-  const errorEl = document.getElementById('login-error');
-
   if (pwd === ADMIN_PASSWORD) {
     sessionStorage.setItem('monika_admin_auth', 'true');
     showDashboard();
   } else {
-    errorEl.textContent = 'Incorrect password. Try again.';
+    document.getElementById('login-error').textContent = 'Incorrect password. Try again.';
     document.getElementById('admin-password').classList.add('shake');
     setTimeout(() => document.getElementById('admin-password').classList.remove('shake'), 500);
   }
@@ -177,70 +123,38 @@ async function showDashboard() {
 }
 
 /* ══════════════════════════════════════════════════════════
-   STORAGE — Reads from API, falls back to defaults
+   DATA LOADING (from REST API)
    ══════════════════════════════════════════════════════════ */
 async function loadProducts() {
-  const data = await apiGet('products');
-  if (data && Array.isArray(data) && data.length > 0) {
-    products = data.map(p => ({
-      ...p,
-      colors: Array.isArray(p.colors) ? p.colors : [],
-      visible: p.visible !== undefined ? p.visible : true,
-      images: Array.isArray(p.images) && p.images.length > 0 ? p.images : (p.image ? [p.image] : [])
-    }));
-  } else {
-    products = JSON.parse(JSON.stringify(DEFAULT_PRODUCTS));
-  }
-}
-
-async function saveProducts() {
-  await apiPost('products', products);
+  try {
+    const res = await fetch('/api/products');
+    if (res.ok) products = await res.json();
+  } catch (e) { console.error('Failed to load products:', e); }
 }
 
 async function loadBanners() {
-  const data = await apiGet('banners');
-  if (data && Array.isArray(data) && data.length > 0) {
-    banners = data;
-  } else {
-    banners = JSON.parse(JSON.stringify(DEFAULT_BANNERS));
-  }
-}
-
-async function saveBanners() {
-  await apiPost('banners', banners);
+  try {
+    const res = await fetch('/api/banners');
+    if (res.ok) banners = await res.json();
+  } catch (e) { console.error('Failed to load banners:', e); }
 }
 
 /* ══════════════════════════════════════════════════════════
    STATS
    ══════════════════════════════════════════════════════════ */
 function renderStats() {
-  const statsEl = document.getElementById('admin-stats');
-  const cats = Object.keys(CATEGORY_LABELS);
+  const el = document.getElementById('admin-stats');
   const total = products.length;
   const visible = products.filter(p => p.visible !== false).length;
-
   let html = `
-    <div class="admin-stat-card admin-stat-card--accent">
-      <div class="admin-stat-card__number">${total}</div>
-      <div class="admin-stat-card__label">Total Products</div>
-    </div>
-    <div class="admin-stat-card admin-stat-card--green">
-      <div class="admin-stat-card__number">${visible}</div>
-      <div class="admin-stat-card__label">Visible</div>
-    </div>
+    <div class="admin-stat-card admin-stat-card--accent"><div class="admin-stat-card__number">${total}</div><div class="admin-stat-card__label">Total Products</div></div>
+    <div class="admin-stat-card admin-stat-card--green"><div class="admin-stat-card__number">${visible}</div><div class="admin-stat-card__label">Visible</div></div>
   `;
-
-  cats.forEach(cat => {
-    const count = products.filter(p => p.category === cat).length;
-    html += `
-      <div class="admin-stat-card">
-        <div class="admin-stat-card__number">${count}</div>
-        <div class="admin-stat-card__label">${CATEGORY_LABELS[cat]}</div>
-      </div>
-    `;
+  Object.entries(CATEGORY_LABELS).forEach(([key, label]) => {
+    const count = products.filter(p => p.category === key).length;
+    html += `<div class="admin-stat-card"><div class="admin-stat-card__number">${count}</div><div class="admin-stat-card__label">${label}</div></div>`;
   });
-
-  statsEl.innerHTML = html;
+  el.innerHTML = html;
 }
 
 /* ══════════════════════════════════════════════════════════
@@ -254,65 +168,60 @@ function renderTable() {
 
   let filtered = [...products];
   if (catFilter !== 'all') filtered = filtered.filter(p => p.category === catFilter);
-  if (search) {
-    filtered = filtered.filter(p =>
-      p.name.toLowerCase().includes(search) || p.brand.toLowerCase().includes(search) ||
-      p.price.toLowerCase().includes(search) || p.category.toLowerCase().includes(search)
-    );
-  }
+  if (search) filtered = filtered.filter(p => (p.name + p.brand + p.price + p.category).toLowerCase().includes(search));
 
-  if (filtered.length === 0) {
-    tbody.innerHTML = '';
-    emptyEl.style.display = 'flex';
-    return;
-  }
-
+  if (filtered.length === 0) { tbody.innerHTML = ''; emptyEl.style.display = 'flex'; return; }
   emptyEl.style.display = 'none';
 
   tbody.innerHTML = filtered.map(product => {
-    const badgeHtml = product.badge ? `<span class="admin-badge">${product.badge}</span>` : '<span class="admin-text-muted">—</span>';
     const imgs = getProductImages(product);
     const primaryImg = imgs[0] || '';
-    const imgCountBadge = imgs.length > 1 ? `<span class="admin-img-count">${imgs.length}</span>` : '';
+    const imgCount = imgs.length > 1 ? `<span class="admin-img-count">${imgs.length}</span>` : '';
     const colors = getProductColors(product);
     const colorsHtml = colors.length > 0
       ? colors.map(c => `<span class="admin-color-dot" style="background:${c === '#E8CDA0' ? 'linear-gradient(135deg,#E8CDA0,#8B4513,#E8CDA0)' : c};${c === '#FFFFFF' || c === '#F5F5DC' ? 'border:1px solid rgba(255,255,255,0.3);' : ''}" title="${getColorName(c)}"></span>`).join('')
       : '<span class="admin-text-muted">—</span>';
-
-    const visibleToggle = product.visible !== false
-      ? `<button class="admin-toggle admin-toggle--on" onclick="toggleVisibility('${product.id}')" title="Visible on store"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>`
-      : `<button class="admin-toggle admin-toggle--off" onclick="toggleVisibility('${product.id}')" title="Hidden from store"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg></button>`;
+    const badge = product.badge ? `<span class="admin-badge">${product.badge}</span>` : '<span class="admin-text-muted">—</span>';
+    const visIcon = product.visible !== false
+      ? `<button class="admin-toggle admin-toggle--on" onclick="toggleVisibility('${product.id}')" title="Visible"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>`
+      : `<button class="admin-toggle admin-toggle--off" onclick="toggleVisibility('${product.id}')" title="Hidden"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg></button>`;
 
     return `
       <tr data-id="${product.id}" class="${product.visible === false ? 'admin-row-hidden' : ''}">
-        <td><div class="admin-table-img">${imgCountBadge}<img src="${primaryImg}" alt="${product.name}" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect fill=%22%23EDE9E3%22 width=%22100%22 height=%22100%22/><text x=%2250%22 y=%2255%22 text-anchor=%22middle%22 fill=%22%23999%22 font-size=%2240%22>👓</text></svg>'" /></div></td>
+        <td><div class="admin-table-img">${imgCount}<img src="${primaryImg}" alt="${product.name}" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect fill=%22%23EDE9E3%22 width=%22100%22 height=%22100%22/><text x=%2250%22 y=%2255%22 text-anchor=%22middle%22 fill=%22%23999%22 font-size=%2240%22>👓</text></svg>'" /></div></td>
         <td><strong>${product.name}</strong></td>
         <td>${product.brand}</td>
         <td><span class="admin-cat-pill">${CATEGORY_LABELS[product.category] || product.category}</span></td>
         <td><strong>${product.price}</strong></td>
         <td><div class="admin-color-dots">${colorsHtml}</div></td>
-        <td>${badgeHtml}</td>
-        <td>${visibleToggle}</td>
+        <td>${badge}</td>
+        <td>${visIcon}</td>
         <td><div class="admin-actions">
           <button class="admin-action-btn admin-action-btn--edit" onclick="editProduct('${product.id}')" title="Edit"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
           <button class="admin-action-btn admin-action-btn--delete" onclick="deleteProduct('${product.id}')" title="Delete"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg></button>
         </div></td>
-      </tr>
-    `;
+      </tr>`;
   }).join('');
 }
 
 /* ══════════════════════════════════════════════════════════
-   VISIBILITY TOGGLE
+   VISIBILITY TOGGLE (REST API)
    ══════════════════════════════════════════════════════════ */
 async function toggleVisibility(id) {
   const idx = products.findIndex(p => p.id === id);
   if (idx === -1) return;
-  products[idx].visible = !products[idx].visible;
-  await saveProducts();
-  renderStats();
-  renderTable();
-  showToast(`"${products[idx].name}" is now ${products[idx].visible ? 'visible' : 'hidden'}.`, 'success');
+  const newVal = !products[idx].visible;
+  try {
+    await fetch(`/api/products/${id}/visibility`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ visible: newVal })
+    });
+    products[idx].visible = newVal;
+    renderStats();
+    renderTable();
+    showToast(`"${products[idx].name}" is now ${newVal ? 'visible' : 'hidden'}.`);
+  } catch (e) { showToast('Failed to toggle visibility.', 'error'); }
 }
 
 /* ══════════════════════════════════════════════════════════
@@ -332,12 +241,9 @@ function openProductModal(product = null) {
     document.getElementById('prod-price').value = product.price;
     document.getElementById('prod-category').value = product.category;
     document.getElementById('prod-badge').value = product.badge || '';
-    document.getElementById('prod-features').value = product.features.join(', ');
-    currentImages = [...getProductImages(product)];
+    document.getElementById('prod-features').value = (product.features || []).join(', ');
+    currentImages = getProductImages(product).map(src => ({ src, isNew: false }));
     currentColors = [...getProductColors(product)];
-    renderThumbnails();
-    renderSelectedColors();
-    updateColorSwatchStates();
   } else {
     titleEl.textContent = 'Add Product';
     submitEl.textContent = 'Save Product';
@@ -345,11 +251,11 @@ function openProductModal(product = null) {
     document.getElementById('edit-product-id').value = '';
     currentImages = [];
     currentColors = [];
-    renderThumbnails();
-    renderSelectedColors();
-    updateColorSwatchStates();
   }
 
+  renderThumbnails();
+  renderSelectedColors();
+  updateColorSwatchStates();
   overlay.classList.add('active');
   document.body.style.overflow = 'hidden';
   setTimeout(() => document.getElementById('prod-name').focus(), 200);
@@ -377,36 +283,50 @@ async function handleFormSubmit(e) {
   const badge = document.getElementById('prod-badge').value.trim();
   const features = document.getElementById('prod-features').value.split(',').map(f => f.trim()).filter(f => f);
 
-  if (!name || !brand || !price || !category || features.length === 0) {
-    showToast('Please fill in all required fields.', 'error');
-    return;
-  }
-  if (currentImages.length === 0) {
-    showToast('Please upload at least one product image.', 'error');
-    return;
-  }
+  if (!name || !brand || !price || !category || features.length === 0) { showToast('Please fill all required fields.', 'error'); return; }
+  if (currentImages.length === 0) { showToast('Please upload at least one image.', 'error'); return; }
 
-  if (editId) {
-    const idx = products.findIndex(p => p.id === editId);
-    if (idx !== -1) {
-      products[idx] = { ...products[idx], name, brand, price, category, badge: badge || undefined, features, image: currentImages[0], images: [...currentImages], colors: [...currentColors] };
-      if (!products[idx].badge) delete products[idx].badge;
+  // Build FormData for file upload
+  const formData = new FormData();
+  formData.append('name', name);
+  formData.append('brand', brand);
+  formData.append('price', price);
+  formData.append('category', category);
+  formData.append('badge', badge);
+  formData.append('features', JSON.stringify(features));
+  formData.append('colors', JSON.stringify(currentColors));
+
+  // Separate existing images (already on server) from new files
+  const existingImages = currentImages.filter(i => !i.isNew).map(i => i.src);
+  formData.append('existingImages', JSON.stringify(existingImages));
+
+  // Append new files
+  currentImages.filter(i => i.isNew && i.file).forEach(i => {
+    formData.append('images', i.file);
+  });
+
+  try {
+    const url = editId ? `/api/products/${editId}` : '/api/products';
+    const method = editId ? 'PUT' : 'POST';
+    const res = await fetch(url, { method, body: formData });
+    const data = await res.json();
+
+    if (data.ok) {
+      await loadProducts();
+      renderStats();
+      renderTable();
+      closeProductModal();
+      showToast(`"${name}" ${editId ? 'updated' : 'added'} successfully!`);
+    } else {
+      showToast(data.error || 'Failed to save product.', 'error');
     }
-    showToast(`"${name}" updated successfully!`, 'success');
-  } else {
-    const newId = category.slice(0, 4) + '-' + Date.now().toString(36);
-    products.push({ id: newId, name, brand, price, category, image: currentImages[0], images: [...currentImages], features, colors: [...currentColors], visible: true, ...(badge ? { badge } : {}) });
-    showToast(`"${name}" added successfully!`, 'success');
+  } catch (err) {
+    showToast('Server error. Please try again.', 'error');
   }
-
-  await saveProducts();
-  renderStats();
-  renderTable();
-  closeProductModal();
 }
 
 /* ══════════════════════════════════════════════════════════
-   EDIT & DELETE
+   EDIT & DELETE (REST API)
    ══════════════════════════════════════════════════════════ */
 function editProduct(id) {
   const product = products.find(p => p.id === id);
@@ -426,74 +346,71 @@ function closeDeleteModal() {
 }
 
 async function confirmDelete() {
-  if (deleteTargetId) {
-    const product = products.find(p => p.id === deleteTargetId);
-    products = products.filter(p => p.id !== deleteTargetId);
-    await saveProducts();
-    renderStats();
-    renderTable();
-    showToast(`"${product?.name || 'Product'}" deleted.`, 'success');
-  }
+  if (!deleteTargetId) { closeDeleteModal(); return; }
+  try {
+    const res = await fetch(`/api/products/${deleteTargetId}`, { method: 'DELETE' });
+    const data = await res.json();
+    if (data.ok) {
+      products = products.filter(p => p.id !== deleteTargetId);
+      renderStats();
+      renderTable();
+      showToast(data.message || 'Product deleted.');
+    }
+  } catch (e) { showToast('Failed to delete.', 'error'); }
   closeDeleteModal();
 }
 
 /* ══════════════════════════════════════════════════════════
    RESET
    ══════════════════════════════════════════════════════════ */
-function closeResetModal() {
-  document.getElementById('reset-modal-overlay').classList.remove('active');
-}
+function closeResetModal() { document.getElementById('reset-modal-overlay').classList.remove('active'); }
 
 async function confirmReset() {
-  products = JSON.parse(JSON.stringify(DEFAULT_PRODUCTS));
-  banners = JSON.parse(JSON.stringify(DEFAULT_BANNERS));
-  await saveProducts();
-  await saveBanners();
-  renderStats();
-  renderTable();
-  showToast('Catalog restored to defaults.', 'success');
+  try {
+    await fetch('/api/products/bulk', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '[]' });
+    products = [];
+    renderStats();
+    renderTable();
+    showToast('All products cleared.');
+  } catch (e) { showToast('Failed to reset.', 'error'); }
   closeResetModal();
 }
 
 /* ══════════════════════════════════════════════════════════
    EXPORT / IMPORT
    ══════════════════════════════════════════════════════════ */
-function exportData() {
-  const data = { products, banners };
-  const json = JSON.stringify(data, null, 2);
-  const blob = new Blob([json], { type: 'application/json' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `monika-opticals-backup-${new Date().toISOString().slice(0, 10)}.json`;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
-  showToast('Full backup exported successfully!', 'success');
+async function exportData() {
+  try {
+    const res = await fetch('/api/export');
+    const data = await res.json();
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `monika-opticals-backup-${new Date().toISOString().slice(0, 10)}.json`;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    showToast('Backup exported!');
+  } catch (e) { showToast('Export failed.', 'error'); }
 }
 
 async function importData(e) {
   const file = e.target.files[0];
   if (!file) return;
-
   const reader = new FileReader();
   reader.onload = async (evt) => {
     try {
       const data = JSON.parse(evt.target.result);
-      if (Array.isArray(data)) {
-        products = data.map(p => ({ ...p, colors: Array.isArray(p.colors) ? p.colors : [], visible: p.visible !== undefined ? p.visible : true, images: Array.isArray(p.images) && p.images.length > 0 ? p.images : (p.image ? [p.image] : []) }));
-      } else if (data.products) {
-        products = data.products.map(p => ({ ...p, colors: Array.isArray(p.colors) ? p.colors : [], visible: p.visible !== undefined ? p.visible : true, images: Array.isArray(p.images) && p.images.length > 0 ? p.images : (p.image ? [p.image] : []) }));
-        if (Array.isArray(data.banners)) { banners = data.banners; await saveBanners(); }
-      } else throw new Error('Invalid format');
-      await saveProducts();
-      renderStats();
-      renderTable();
-      showToast('Imported successfully!', 'success');
-    } catch (err) {
-      showToast('Invalid file format.', 'error');
-    }
+      const payload = Array.isArray(data) ? { products: data, banners: [] } : data;
+      const res = await fetch('/api/import', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+      if (res.ok) {
+        await loadProducts();
+        await loadBanners();
+        renderStats();
+        renderTable();
+        showToast('Imported successfully!');
+      }
+    } catch (err) { showToast('Invalid file format.', 'error'); }
   };
   reader.readAsText(file);
   e.target.value = '';
@@ -503,24 +420,16 @@ async function importData(e) {
    COLOR PICKER
    ══════════════════════════════════════════════════════════ */
 function setupColorPicker() {
-  const presets = document.getElementById('color-presets');
-  const customInput = document.getElementById('custom-color-input');
-
-  presets.addEventListener('click', (e) => {
+  document.getElementById('color-presets').addEventListener('click', e => {
     const swatch = e.target.closest('.admin-color-swatch');
     if (!swatch) return;
     const color = swatch.dataset.color;
-    if (color === 'custom') { customInput.click(); return; }
+    if (color === 'custom') { document.getElementById('custom-color-input').click(); return; }
     toggleColor(color);
   });
-
-  customInput.addEventListener('input', (e) => {
+  document.getElementById('custom-color-input').addEventListener('input', e => {
     const color = e.target.value.toUpperCase();
-    if (!currentColors.includes(color)) {
-      currentColors.push(color);
-      renderSelectedColors();
-      updateColorSwatchStates();
-    }
+    if (!currentColors.includes(color)) { currentColors.push(color); renderSelectedColors(); updateColorSwatchStates(); }
   });
 }
 
@@ -533,24 +442,20 @@ function toggleColor(hex) {
   updateColorSwatchStates();
 }
 
-function removeColor(index) {
-  currentColors.splice(index, 1);
-  renderSelectedColors();
-  updateColorSwatchStates();
-}
+function removeColor(i) { currentColors.splice(i, 1); renderSelectedColors(); updateColorSwatchStates(); }
 
 function updateColorSwatchStates() {
-  document.querySelectorAll('#color-presets .admin-color-swatch').forEach(swatch => {
-    const c = swatch.dataset.color;
+  document.querySelectorAll('#color-presets .admin-color-swatch').forEach(s => {
+    const c = s.dataset.color;
     if (c === 'custom') return;
-    swatch.classList.toggle('selected', currentColors.includes(c.toUpperCase()));
+    s.classList.toggle('selected', currentColors.includes(c.toUpperCase()));
   });
 }
 
 function renderSelectedColors() {
-  const container = document.getElementById('selected-colors');
-  if (currentColors.length === 0) { container.innerHTML = '<span class="admin-no-colors">No colors selected</span>'; return; }
-  container.innerHTML = currentColors.map((c, i) => `
+  const el = document.getElementById('selected-colors');
+  if (currentColors.length === 0) { el.innerHTML = '<span class="admin-no-colors">No colors selected</span>'; return; }
+  el.innerHTML = currentColors.map((c, i) => `
     <div class="admin-selected-color" title="${getColorName(c)}">
       <span class="admin-selected-color__circle" style="background:${c === '#E8CDA0' ? 'linear-gradient(135deg,#E8CDA0,#8B4513,#E8CDA0)' : c};${c === '#FFFFFF' || c === '#F5F5DC' ? 'border:1px solid rgba(255,255,255,0.3);' : ''}"></span>
       <span class="admin-selected-color__name">${getColorName(c)}</span>
@@ -560,28 +465,29 @@ function renderSelectedColors() {
 }
 
 /* ══════════════════════════════════════════════════════════
-   IMAGE UPLOAD
+   IMAGE UPLOAD (File-based, not base64)
    ══════════════════════════════════════════════════════════ */
 function setupImageUpload() {
   const dropzone = document.getElementById('dropzone');
   const fileInput = document.getElementById('prod-image');
   dropzone.addEventListener('click', () => fileInput.click());
-  fileInput.addEventListener('change', () => { if (fileInput.files.length > 0) { processMultipleImages(fileInput.files); fileInput.value = ''; } });
-  ['dragenter', 'dragover'].forEach(evt => dropzone.addEventListener(evt, (e) => { e.preventDefault(); dropzone.classList.add('dragover'); }));
-  ['dragleave', 'drop'].forEach(evt => dropzone.addEventListener(evt, (e) => { e.preventDefault(); dropzone.classList.remove('dragover'); }));
-  dropzone.addEventListener('drop', (e) => { e.preventDefault(); if (e.dataTransfer.files.length > 0) processMultipleImages(e.dataTransfer.files); });
+  fileInput.addEventListener('change', () => { if (fileInput.files.length > 0) { addImageFiles(fileInput.files); fileInput.value = ''; } });
+  ['dragenter', 'dragover'].forEach(e => dropzone.addEventListener(e, ev => { ev.preventDefault(); dropzone.classList.add('dragover'); }));
+  ['dragleave', 'drop'].forEach(e => dropzone.addEventListener(e, ev => { ev.preventDefault(); dropzone.classList.remove('dragover'); }));
+  dropzone.addEventListener('drop', ev => { ev.preventDefault(); if (ev.dataTransfer.files.length > 0) addImageFiles(ev.dataTransfer.files); });
 }
 
-function processMultipleImages(files) {
+function addImageFiles(files) {
   const remaining = 6 - currentImages.length;
-  if (remaining <= 0) { showToast('Maximum 6 images reached.', 'error'); return; }
-  const toProcess = Array.from(files).slice(0, remaining);
-  let processed = 0;
-  toProcess.forEach(file => {
+  if (remaining <= 0) { showToast('Maximum 6 images.', 'error'); return; }
+  Array.from(files).slice(0, remaining).forEach(file => {
     if (!file.type.startsWith('image/')) return;
-    if (file.size > 2 * 1024 * 1024) { showToast(`"${file.name}" is too large (max 2MB).`, 'error'); return; }
+    if (file.size > 5 * 1024 * 1024) { showToast(`"${file.name}" too large (max 5MB).`, 'error'); return; }
     const reader = new FileReader();
-    reader.onload = (e) => { currentImages.push(e.target.result); processed++; if (processed >= toProcess.length) renderThumbnails(); };
+    reader.onload = e => {
+      currentImages.push({ src: e.target.result, isNew: true, file });
+      renderThumbnails();
+    };
     reader.readAsDataURL(file);
   });
 }
@@ -591,17 +497,17 @@ function renderThumbnails() {
   if (currentImages.length === 0) { grid.innerHTML = ''; return; }
   grid.innerHTML = currentImages.map((img, i) => `
     <div class="admin-thumb" data-index="${i}">
-      <img src="${img}" alt="Image ${i + 1}" />
+      <img src="${img.src}" alt="Image ${i + 1}" />
       ${i === 0 ? '<span class="admin-thumb__primary">Primary</span>' : ''}
       <button type="button" class="admin-thumb__remove" onclick="removeImage(${i})">&times;</button>
     </div>
   `).join('');
 }
 
-function removeImage(index) { currentImages.splice(index, 1); renderThumbnails(); }
+function removeImage(i) { currentImages.splice(i, 1); renderThumbnails(); }
 
 /* ══════════════════════════════════════════════════════════
-   BANNER MANAGER
+   BANNER MANAGER (REST API with file upload)
    ══════════════════════════════════════════════════════════ */
 function setupBannerManager() {
   const addBtn = document.getElementById('add-banner-btn');
@@ -609,16 +515,17 @@ function setupBannerManager() {
   addBtn.addEventListener('click', () => fileInput.click());
   fileInput.addEventListener('change', () => {
     if (fileInput.files.length > 0) {
-      Array.from(fileInput.files).forEach(file => {
+      Array.from(fileInput.files).forEach(async file => {
         if (!file.type.startsWith('image/')) return;
-        if (file.size > 3 * 1024 * 1024) { showToast(`"${file.name}" is too large (max 3MB).`, 'error'); return; }
-        const reader = new FileReader();
-        reader.onload = async (e) => {
-          banners.push({ id: 'b-' + Date.now().toString(36) + Math.random().toString(36).slice(2, 4), src: e.target.result, alt: file.name.replace(/\.[^/.]+$/, ''), visible: true });
-          await saveBanners();
-          renderBanners();
-        };
-        reader.readAsDataURL(file);
+        if (file.size > 5 * 1024 * 1024) { showToast(`"${file.name}" too large (max 5MB).`, 'error'); return; }
+        const formData = new FormData();
+        formData.append('image', file);
+        formData.append('alt', file.name.replace(/\.[^/.]+$/, ''));
+        try {
+          const res = await fetch('/api/banners', { method: 'POST', body: formData });
+          const data = await res.json();
+          if (data.ok) { banners.push(data.banner); renderBanners(); showToast('Banner added!'); }
+        } catch (e) { showToast('Failed to upload banner.', 'error'); }
       });
       fileInput.value = '';
     }
@@ -630,18 +537,18 @@ function renderBanners() {
   const emptyEl = document.getElementById('banner-empty');
   if (banners.length === 0) { grid.innerHTML = ''; emptyEl.style.display = 'flex'; return; }
   emptyEl.style.display = 'none';
-  grid.innerHTML = banners.map((banner, i) => `
-    <div class="admin-banner-card ${banner.visible ? '' : 'admin-banner-card--hidden'}" data-id="${banner.id}">
-      <div class="admin-banner-card__img"><img src="${banner.src}" alt="${banner.alt}" /><div class="admin-banner-card__overlay"><span class="admin-banner-card__order">${i + 1}</span></div></div>
+  grid.innerHTML = banners.map((b, i) => `
+    <div class="admin-banner-card ${b.visible ? '' : 'admin-banner-card--hidden'}" data-id="${b.id}">
+      <div class="admin-banner-card__img"><img src="${b.src}" alt="${b.alt}" /><div class="admin-banner-card__overlay"><span class="admin-banner-card__order">${i + 1}</span></div></div>
       <div class="admin-banner-card__controls">
-        <div class="admin-banner-card__info"><input class="admin-banner-alt-input" value="${banner.alt}" onchange="updateBannerAlt('${banner.id}', this.value)" placeholder="Alt text..." /></div>
+        <div class="admin-banner-card__info"><input class="admin-banner-alt-input" value="${b.alt}" onchange="updateBannerAlt('${b.id}', this.value)" placeholder="Alt text..." /></div>
         <div class="admin-banner-card__actions">
-          ${i > 0 ? `<button class="admin-action-btn admin-action-btn--edit" onclick="moveBanner('${banner.id}', -1)" title="Move Left"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg></button>` : ''}
-          ${i < banners.length - 1 ? `<button class="admin-action-btn admin-action-btn--edit" onclick="moveBanner('${banner.id}', 1)" title="Move Right"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></button>` : ''}
-          <button class="admin-toggle ${banner.visible ? 'admin-toggle--on' : 'admin-toggle--off'}" onclick="toggleBannerVisibility('${banner.id}')" title="${banner.visible ? 'Hide' : 'Show'}">
-            ${banner.visible ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>' : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>'}
+          ${i > 0 ? `<button class="admin-action-btn admin-action-btn--edit" onclick="moveBanner('${b.id}', -1)" title="Move Left"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg></button>` : ''}
+          ${i < banners.length - 1 ? `<button class="admin-action-btn admin-action-btn--edit" onclick="moveBanner('${b.id}', 1)" title="Move Right"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></button>` : ''}
+          <button class="admin-toggle ${b.visible ? 'admin-toggle--on' : 'admin-toggle--off'}" onclick="toggleBannerVisibility('${b.id}')" title="${b.visible ? 'Hide' : 'Show'}">
+            ${b.visible ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>' : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>'}
           </button>
-          <button class="admin-action-btn admin-action-btn--delete" onclick="deleteBanner('${banner.id}')" title="Delete"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>
+          <button class="admin-action-btn admin-action-btn--delete" onclick="deleteBanner('${b.id}')" title="Delete"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>
         </div>
       </div>
     </div>
@@ -651,17 +558,22 @@ function renderBanners() {
 async function toggleBannerVisibility(id) {
   const idx = banners.findIndex(b => b.id === id);
   if (idx === -1) return;
-  banners[idx].visible = !banners[idx].visible;
-  await saveBanners();
-  renderBanners();
-  showToast(`Banner is now ${banners[idx].visible ? 'visible' : 'hidden'}.`, 'success');
+  const newVal = !banners[idx].visible;
+  try {
+    await fetch(`/api/banners/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ visible: newVal }) });
+    banners[idx].visible = newVal;
+    renderBanners();
+    showToast(`Banner ${newVal ? 'shown' : 'hidden'}.`);
+  } catch (e) { showToast('Failed.', 'error'); }
 }
 
 async function deleteBanner(id) {
-  banners = banners.filter(b => b.id !== id);
-  await saveBanners();
-  renderBanners();
-  showToast('Banner deleted.', 'success');
+  try {
+    await fetch(`/api/banners/${id}`, { method: 'DELETE' });
+    banners = banners.filter(b => b.id !== id);
+    renderBanners();
+    showToast('Banner deleted.');
+  } catch (e) { showToast('Failed to delete.', 'error'); }
 }
 
 async function moveBanner(id, direction) {
@@ -670,13 +582,18 @@ async function moveBanner(id, direction) {
   const newIdx = idx + direction;
   if (newIdx < 0 || newIdx >= banners.length) return;
   [banners[idx], banners[newIdx]] = [banners[newIdx], banners[idx]];
-  await saveBanners();
-  renderBanners();
+  try {
+    await fetch('/api/banners/reorder', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ orderedIds: banners.map(b => b.id) }) });
+    renderBanners();
+  } catch (e) { showToast('Reorder failed.', 'error'); }
 }
 
 async function updateBannerAlt(id, value) {
   const idx = banners.findIndex(b => b.id === id);
-  if (idx !== -1) { banners[idx].alt = value; await saveBanners(); }
+  if (idx !== -1) {
+    banners[idx].alt = value;
+    try { await fetch(`/api/banners/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ alt: value }) }); } catch(e) {}
+  }
 }
 
 /* ══════════════════════════════════════════════════════════
@@ -684,26 +601,24 @@ async function updateBannerAlt(id, value) {
    ══════════════════════════════════════════════════════════ */
 function renderDisplayGrid() {
   const grid = document.getElementById('display-grid');
-  if (products.length === 0) { grid.innerHTML = '<p class="admin-text-muted" style="padding:40px;text-align:center;">No products to manage.</p>'; return; }
-  grid.innerHTML = products.map(product => {
-    const imgs = getProductImages(product);
-    const primaryImg = imgs[0] || '';
-    const isVisible = product.visible !== false;
+  if (products.length === 0) { grid.innerHTML = '<p class="admin-text-muted" style="padding:40px;text-align:center;">No products yet.</p>'; return; }
+  grid.innerHTML = products.map(p => {
+    const imgs = getProductImages(p);
+    const isVis = p.visible !== false;
     return `
-      <div class="admin-display-card ${isVisible ? '' : 'admin-display-card--hidden'}" data-id="${product.id}">
-        <div class="admin-display-card__img"><img src="${primaryImg}" alt="${product.name}" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect fill=%22%23EDE9E3%22 width=%22100%22 height=%22100%22/><text x=%2250%22 y=%2255%22 text-anchor=%22middle%22 fill=%22%23999%22 font-size=%2240%22>👓</text></svg>'" /></div>
-        <div class="admin-display-card__info"><strong>${product.name}</strong><small>${product.brand} · ${CATEGORY_LABELS[product.category] || product.category}</small></div>
-        <label class="admin-switch"><input type="checkbox" ${isVisible ? 'checked' : ''} onchange="toggleVisibilityFromDisplay('${product.id}', this.checked)" /><span class="admin-switch__slider"></span></label>
-      </div>
-    `;
+      <div class="admin-display-card ${isVis ? '' : 'admin-display-card--hidden'}" data-id="${p.id}">
+        <div class="admin-display-card__img"><img src="${imgs[0] || ''}" alt="${p.name}" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect fill=%22%23EDE9E3%22 width=%22100%22 height=%22100%22/><text x=%2250%22 y=%2255%22 text-anchor=%22middle%22 fill=%22%23999%22 font-size=%2240%22>👓</text></svg>'" /></div>
+        <div class="admin-display-card__info"><strong>${p.name}</strong><small>${p.brand} · ${CATEGORY_LABELS[p.category] || p.category}</small></div>
+        <label class="admin-switch"><input type="checkbox" ${isVis ? 'checked' : ''} onchange="toggleVisibilityFromDisplay('${p.id}', this.checked)" /><span class="admin-switch__slider"></span></label>
+      </div>`;
   }).join('');
 }
 
 async function toggleVisibilityFromDisplay(id, checked) {
   const idx = products.findIndex(p => p.id === id);
   if (idx === -1) return;
+  await fetch(`/api/products/${id}/visibility`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ visible: checked }) });
   products[idx].visible = checked;
-  await saveProducts();
   renderStats();
   const card = document.querySelector(`.admin-display-card[data-id="${id}"]`);
   if (card) card.classList.toggle('admin-display-card--hidden', !checked);
