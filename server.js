@@ -31,18 +31,8 @@ if (!fs.existsSync(BANNERS_FILE))  fs.writeFileSync(BANNERS_FILE, '[]', 'utf-8')
 
 /* ── Middleware ── */
 
-// CORS — allow Vercel frontend to call this API
-app.use(cors({
-  origin: [
-    'https://monika-opticals2-henna.vercel.app',
-    'http://localhost:3000',
-    'http://localhost:5500',
-    'http://127.0.0.1:5500'
-  ],
-  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
-  credentials: true
-}));
+// CORS — allow all origins to prevent Vercel domain mismatches
+app.use(cors());
 
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
@@ -385,6 +375,14 @@ app.post('/api/import', (req, res) => {
   }
 });
 
+
+/* ═══════════════════════════════════════════════════════════
+   GLOBAL ERROR HANDLER
+   ═══════════════════════════════════════════════════════════ */
+app.use((err, req, res, next) => {
+  console.error('🔥 Server Error:', err.message || err);
+  res.status(500).json({ error: err.message || 'Internal Server Error' });
+});
 
 /* ═══════════════════════════════════════════════════════════
    START SERVER
