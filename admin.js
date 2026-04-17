@@ -127,14 +127,14 @@ async function showDashboard() {
    ══════════════════════════════════════════════════════════ */
 async function loadProducts() {
   try {
-    const res = await fetch('/api/products');
+    const res = await fetch(API_CONFIG.api('/api/products'));
     if (res.ok) products = await res.json();
   } catch (e) { console.error('Failed to load products:', e); }
 }
 
 async function loadBanners() {
   try {
-    const res = await fetch('/api/banners');
+    const res = await fetch(API_CONFIG.api('/api/banners'));
     if (res.ok) banners = await res.json();
   } catch (e) { console.error('Failed to load banners:', e); }
 }
@@ -175,7 +175,7 @@ function renderTable() {
 
   tbody.innerHTML = filtered.map(product => {
     const imgs = getProductImages(product);
-    const primaryImg = imgs[0] || '';
+    const primaryImg = imgs[0] ? API_CONFIG.imageUrl(imgs[0]) : '';
     const imgCount = imgs.length > 1 ? `<span class="admin-img-count">${imgs.length}</span>` : '';
     const colors = getProductColors(product);
     const colorsHtml = colors.length > 0
@@ -212,7 +212,7 @@ async function toggleVisibility(id) {
   if (idx === -1) return;
   const newVal = !products[idx].visible;
   try {
-    await fetch(`/api/products/${id}/visibility`, {
+    await fetch(API_CONFIG.api(`/api/products/${id}/visibility`), {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ visible: newVal })
@@ -242,7 +242,7 @@ function openProductModal(product = null) {
     document.getElementById('prod-category').value = product.category;
     document.getElementById('prod-badge').value = product.badge || '';
     document.getElementById('prod-features').value = (product.features || []).join(', ');
-    currentImages = getProductImages(product).map(src => ({ src, isNew: false }));
+    currentImages = getProductImages(product).map(src => ({ src: API_CONFIG.imageUrl(src), isNew: false, originalSrc: src }));
     currentColors = [...getProductColors(product)];
   } else {
     titleEl.textContent = 'Add Product';
@@ -297,7 +297,7 @@ async function handleFormSubmit(e) {
   formData.append('colors', JSON.stringify(currentColors));
 
   // Separate existing images (already on server) from new files
-  const existingImages = currentImages.filter(i => !i.isNew).map(i => i.src);
+  const existingImages = currentImages.filter(i => !i.isNew).map(i => i.originalSrc || i.src);
   formData.append('existingImages', JSON.stringify(existingImages));
 
   // Append new files
@@ -306,7 +306,7 @@ async function handleFormSubmit(e) {
   });
 
   try {
-    const url = editId ? `/api/products/${editId}` : '/api/products';
+    const url = editId ? API_CONFIG.api(`/api/products/${editId}`) : API_CONFIG.api('/api/products');
     const method = editId ? 'PUT' : 'POST';
     const res = await fetch(url, { method, body: formData });
     const data = await res.json();
@@ -348,7 +348,7 @@ function closeDeleteModal() {
 async function confirmDelete() {
   if (!deleteTargetId) { closeDeleteModal(); return; }
   try {
-    const res = await fetch(`/api/products/${deleteTargetId}`, { method: 'DELETE' });
+    const res = await fetch(API_CONFIG.api(`/api/products/${deleteTargetId}`), { method: 'DELETE' });
     const data = await res.json();
     if (data.ok) {
       products = products.filter(p => p.id !== deleteTargetId);
@@ -367,7 +367,7 @@ function closeResetModal() { document.getElementById('reset-modal-overlay').clas
 
 async function confirmReset() {
   try {
-    await fetch('/api/products/bulk', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '[]' });
+    await fetch(API_CONFIG.api('/api/products/bulk'), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '[]' });
     products = [];
     renderStats();
     renderTable();
@@ -381,7 +381,7 @@ async function confirmReset() {
    ══════════════════════════════════════════════════════════ */
 async function exportData() {
   try {
-    const res = await fetch('/api/export');
+    const res = await fetch(API_CONFIG.api('/api/export'));
     const data = await res.json();
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
@@ -402,7 +402,7 @@ async function importData(e) {
     try {
       const data = JSON.parse(evt.target.result);
       const payload = Array.isArray(data) ? { products: data, banners: [] } : data;
-      const res = await fetch('/api/import', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+      const res = await fetch(API_CONFIG.api('/api/import'), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
       if (res.ok) {
         await loadProducts();
         await loadBanners();
@@ -522,7 +522,7 @@ function setupBannerManager() {
         formData.append('image', file);
         formData.append('alt', file.name.replace(/\.[^/.]+$/, ''));
         try {
-          const res = await fetch('/api/banners', { method: 'POST', body: formData });
+          const res = await fetch(API_CONFIG.api('/api/banners'), { method: 'POST', body: formData });
           const data = await res.json();
           if (data.ok) { banners.push(data.banner); renderBanners(); showToast('Banner added!'); }
         } catch (e) { showToast('Failed to upload banner.', 'error'); }
@@ -537,9 +537,11 @@ function renderBanners() {
   const emptyEl = document.getElementById('banner-empty');
   if (banners.length === 0) { grid.innerHTML = ''; emptyEl.style.display = 'flex'; return; }
   emptyEl.style.display = 'none';
-  grid.innerHTML = banners.map((b, i) => `
+  grid.innerHTML = banners.map((b, i) => {
+    const imgSrc = API_CONFIG.imageUrl(b.src);
+    return `
     <div class="admin-banner-card ${b.visible ? '' : 'admin-banner-card--hidden'}" data-id="${b.id}">
-      <div class="admin-banner-card__img"><img src="${b.src}" alt="${b.alt}" /><div class="admin-banner-card__overlay"><span class="admin-banner-card__order">${i + 1}</span></div></div>
+      <div class="admin-banner-card__img"><img src="${imgSrc}" alt="${b.alt}" /><div class="admin-banner-card__overlay"><span class="admin-banner-card__order">${i + 1}</span></div></div>
       <div class="admin-banner-card__controls">
         <div class="admin-banner-card__info"><input class="admin-banner-alt-input" value="${b.alt}" onchange="updateBannerAlt('${b.id}', this.value)" placeholder="Alt text..." /></div>
         <div class="admin-banner-card__actions">
@@ -552,7 +554,7 @@ function renderBanners() {
         </div>
       </div>
     </div>
-  `).join('');
+  `;}).join('');
 }
 
 async function toggleBannerVisibility(id) {
@@ -560,7 +562,7 @@ async function toggleBannerVisibility(id) {
   if (idx === -1) return;
   const newVal = !banners[idx].visible;
   try {
-    await fetch(`/api/banners/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ visible: newVal }) });
+    await fetch(API_CONFIG.api(`/api/banners/${id}`), { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ visible: newVal }) });
     banners[idx].visible = newVal;
     renderBanners();
     showToast(`Banner ${newVal ? 'shown' : 'hidden'}.`);
@@ -569,7 +571,7 @@ async function toggleBannerVisibility(id) {
 
 async function deleteBanner(id) {
   try {
-    await fetch(`/api/banners/${id}`, { method: 'DELETE' });
+    await fetch(API_CONFIG.api(`/api/banners/${id}`), { method: 'DELETE' });
     banners = banners.filter(b => b.id !== id);
     renderBanners();
     showToast('Banner deleted.');
@@ -583,7 +585,7 @@ async function moveBanner(id, direction) {
   if (newIdx < 0 || newIdx >= banners.length) return;
   [banners[idx], banners[newIdx]] = [banners[newIdx], banners[idx]];
   try {
-    await fetch('/api/banners/reorder', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ orderedIds: banners.map(b => b.id) }) });
+    await fetch(API_CONFIG.api('/api/banners/reorder'), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ orderedIds: banners.map(b => b.id) }) });
     renderBanners();
   } catch (e) { showToast('Reorder failed.', 'error'); }
 }
@@ -592,7 +594,7 @@ async function updateBannerAlt(id, value) {
   const idx = banners.findIndex(b => b.id === id);
   if (idx !== -1) {
     banners[idx].alt = value;
-    try { await fetch(`/api/banners/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ alt: value }) }); } catch(e) {}
+    try { await fetch(API_CONFIG.api(`/api/banners/${id}`), { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ alt: value }) }); } catch(e) {}
   }
 }
 
@@ -605,9 +607,10 @@ function renderDisplayGrid() {
   grid.innerHTML = products.map(p => {
     const imgs = getProductImages(p);
     const isVis = p.visible !== false;
+    const imgSrc = imgs[0] ? API_CONFIG.imageUrl(imgs[0]) : '';
     return `
       <div class="admin-display-card ${isVis ? '' : 'admin-display-card--hidden'}" data-id="${p.id}">
-        <div class="admin-display-card__img"><img src="${imgs[0] || ''}" alt="${p.name}" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect fill=%22%23EDE9E3%22 width=%22100%22 height=%22100%22/><text x=%2250%22 y=%2255%22 text-anchor=%22middle%22 fill=%22%23999%22 font-size=%2240%22>👓</text></svg>'" /></div>
+        <div class="admin-display-card__img"><img src="${imgSrc}" alt="${p.name}" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect fill=%22%23EDE9E3%22 width=%22100%22 height=%22100%22/><text x=%2250%22 y=%2255%22 text-anchor=%22middle%22 fill=%22%23999%22 font-size=%2240%22>👓</text></svg>'" /></div>
         <div class="admin-display-card__info"><strong>${p.name}</strong><small>${p.brand} · ${CATEGORY_LABELS[p.category] || p.category}</small></div>
         <label class="admin-switch"><input type="checkbox" ${isVis ? 'checked' : ''} onchange="toggleVisibilityFromDisplay('${p.id}', this.checked)" /><span class="admin-switch__slider"></span></label>
       </div>`;
@@ -617,7 +620,7 @@ function renderDisplayGrid() {
 async function toggleVisibilityFromDisplay(id, checked) {
   const idx = products.findIndex(p => p.id === id);
   if (idx === -1) return;
-  await fetch(`/api/products/${id}/visibility`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ visible: checked }) });
+  await fetch(API_CONFIG.api(`/api/products/${id}/visibility`), { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ visible: checked }) });
   products[idx].visible = checked;
   renderStats();
   const card = document.querySelector(`.admin-display-card[data-id="${id}"]`);

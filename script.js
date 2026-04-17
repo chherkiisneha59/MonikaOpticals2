@@ -169,13 +169,13 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (heroGallery) {
     // Load banner images from persistent backend API
     try {
-      const res = await fetch('/api/banners');
+      const res = await fetch(API_CONFIG.api('/api/banners'));
       if (res.ok) {
         const banners = await res.json();
         const visibleBanners = banners.filter(b => b.visible !== false);
         if (visibleBanners.length > 0) {
           heroGallery.innerHTML = visibleBanners.map(b =>
-            `<div class="hero__gallery-card"><img src="${b.src}" alt="${b.alt || 'Eyewear'}" /></div>`
+            `<div class="hero__gallery-card"><img src="${API_CONFIG.imageUrl(b.src)}" alt="${b.alt || 'Eyewear'}" /></div>`
           ).join('');
         }
       }

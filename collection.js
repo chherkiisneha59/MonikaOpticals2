@@ -35,7 +35,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Load products ONLY from the backend API (admin-managed)
   let activeProducts = [];
   try {
-    const res = await fetch('/api/products');
+    const res = await fetch(API_CONFIG.api('/api/products'));
     if (res.ok) {
       const data = await res.json();
       if (Array.isArray(data)) activeProducts = data;
@@ -102,7 +102,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       card.className = 'product-card reveal';
       card.style.transitionDelay = `${Math.min(i * 0.08, 0.5)}s`;
 
-      const imgs = getImages(product);
+      const imgs = getImages(product).map(src => API_CONFIG.imageUrl(src));
       const primaryImg = imgs[0] || '';
 
       const badgeHTML = product.badge

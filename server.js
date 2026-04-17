@@ -6,6 +6,7 @@
    ═══════════════════════════════════════════════════════════════ */
 
 const express = require('express');
+const cors    = require('cors');
 const multer  = require('multer');
 const path    = require('path');
 const fs      = require('fs');
@@ -29,8 +30,25 @@ if (!fs.existsSync(PRODUCTS_FILE)) fs.writeFileSync(PRODUCTS_FILE, '[]', 'utf-8'
 if (!fs.existsSync(BANNERS_FILE))  fs.writeFileSync(BANNERS_FILE, '[]', 'utf-8');
 
 /* ── Middleware ── */
+
+// CORS — allow Vercel frontend to call this API
+app.use(cors({
+  origin: [
+    'https://monika-opticals2-henna.vercel.app',
+    'http://localhost:3000',
+    'http://localhost:5500',
+    'http://127.0.0.1:5500'
+  ],
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true
+}));
+
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
+
+// Serve uploaded images as static files
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Pure REST API root route
 app.get('/', (req, res) => {
