@@ -32,14 +32,10 @@ if (!fs.existsSync(BANNERS_FILE))  fs.writeFileSync(BANNERS_FILE, '[]', 'utf-8')
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
-// Serve static files (HTML, CSS, JS, images)
-app.use(express.static(__dirname, {
-  index: 'index.html',
-  extensions: ['html']
-}));
-
-// Serve uploaded files
-app.use('/uploads', express.static(UPLOADS_DIR));
+// Pure REST API root route
+app.get('/', (req, res) => {
+  res.json({ message: 'Backend is running' });
+});
 
 /* ── Multer config for product images ── */
 const productStorage = multer.diskStorage({
