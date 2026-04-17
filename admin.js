@@ -2,6 +2,7 @@
    Monika Opticals — Admin Panel Frontend
    Full CRUD, Banner Manager, Display Control, Frame Colors
    Uses Express REST API backend with Multer file uploads
+   Version 2.0.1
    ═══════════════════════════════════════════════════════════════ */
 
 const ADMIN_PASSWORD = 'monika1980';
