@@ -322,6 +322,7 @@ async function handleFormSubmit(e) {
       showToast(data.error || 'Failed to save product.', 'error');
     }
   } catch (err) {
+    alert('EXACT ERROR WAS: ' + err.message + ' | ' + err.stack);
     showToast('Server error. Please try again.', 'error');
   }
 }
