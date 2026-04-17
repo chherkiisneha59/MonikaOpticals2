@@ -40,6 +40,12 @@ app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 // Serve uploaded images as static files
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
+// Request logging for debugging
+app.use((req, res, next) => {
+  console.log(`  → ${req.method} ${req.path}`);
+  next();
+});
+
 // Pure REST API root route
 app.get('/', (req, res) => {
   res.json({ message: 'Backend is running' });
@@ -114,97 +120,112 @@ app.get('/api/products/:id', (req, res) => {
 });
 
 // POST create product (with image upload)
-app.post('/api/products', uploadProduct.array('images', 6), (req, res) => {
-  try {
-    const products = readJSON(PRODUCTS_FILE);
-    const body = req.body;
-
-    // Build image paths from uploaded files
-    const uploadedImages = (req.files || []).map(f => '/uploads/products/' + f.filename);
-    
-    // Also accept base64 images sent in body
-    let existingImages = [];
-    if (body.existingImages) {
-      try { existingImages = JSON.parse(body.existingImages); } catch(e) { existingImages = []; }
+app.post('/api/products', (req, res) => {
+  uploadProduct.array('images', 6)(req, res, (multerErr) => {
+    if (multerErr) {
+      console.error('  ❌ Multer error:', multerErr.message);
+      return res.status(400).json({ error: 'Upload error: ' + multerErr.message });
     }
+    try {
+      const products = readJSON(PRODUCTS_FILE);
+      const body = req.body;
 
-    const allImages = [...existingImages, ...uploadedImages];
+      console.log('  📋 Body fields:', Object.keys(body));
+      console.log('  📁 Files uploaded:', (req.files || []).length);
 
-    const newProduct = {
-      id: body.id || ('prod-' + Date.now().toString(36)),
-      name: body.name,
-      brand: body.brand,
-      price: body.price,
-      category: body.category,
-      features: body.features ? (typeof body.features === 'string' ? JSON.parse(body.features) : body.features) : [],
-      badge: body.badge || '',
-      colors: body.colors ? (typeof body.colors === 'string' ? JSON.parse(body.colors) : body.colors) : [],
-      images: allImages,
-      image: allImages[0] || '',
-      visible: body.visible !== undefined ? body.visible === 'true' || body.visible === true : true
-    };
+      // Build image paths from uploaded files
+      const uploadedImages = (req.files || []).map(f => '/uploads/products/' + f.filename);
+      
+      // Also accept base64 images sent in body
+      let existingImages = [];
+      if (body.existingImages) {
+        try { existingImages = JSON.parse(body.existingImages); } catch(e) { existingImages = []; }
+      }
 
-    products.push(newProduct);
-    writeJSON(PRODUCTS_FILE, products);
+      const allImages = [...existingImages, ...uploadedImages];
 
-    console.log(`  ✅ Product added: "${newProduct.name}" (${newProduct.id})`);
-    res.json({ ok: true, product: newProduct });
-  } catch (err) {
-    console.error('  ❌ Error adding product:', err.message);
-    res.status(500).json({ error: err.message });
-  }
+      const newProduct = {
+        id: body.id || ('prod-' + Date.now().toString(36)),
+        name: body.name,
+        brand: body.brand,
+        price: body.price,
+        category: body.category,
+        features: body.features ? (typeof body.features === 'string' ? JSON.parse(body.features) : body.features) : [],
+        badge: body.badge || '',
+        colors: body.colors ? (typeof body.colors === 'string' ? JSON.parse(body.colors) : body.colors) : [],
+        images: allImages,
+        image: allImages[0] || '',
+        visible: body.visible !== undefined ? body.visible === 'true' || body.visible === true : true
+      };
+
+      products.push(newProduct);
+      writeJSON(PRODUCTS_FILE, products);
+
+      console.log(`  ✅ Product added: "${newProduct.name}" (${newProduct.id})`);
+      res.json({ ok: true, product: newProduct });
+    } catch (err) {
+      console.error('  ❌ Error adding product:', err.message, err.stack);
+      res.status(500).json({ error: err.message });
+    }
+  });
 });
 
 // PUT update product
-app.put('/api/products/:id', uploadProduct.array('images', 6), (req, res) => {
-  try {
-    const products = readJSON(PRODUCTS_FILE);
-    const idx = products.findIndex(p => p.id === req.params.id);
-    if (idx === -1) return res.status(404).json({ error: 'Product not found' });
-
-    const body = req.body;
-
-    // New uploaded images
-    const uploadedImages = (req.files || []).map(f => '/uploads/products/' + f.filename);
-
-    // Existing images to keep (sent from frontend)
-    let existingImages = [];
-    if (body.existingImages) {
-      try { existingImages = JSON.parse(body.existingImages); } catch(e) { existingImages = []; }
+app.put('/api/products/:id', (req, res) => {
+  uploadProduct.array('images', 6)(req, res, (multerErr) => {
+    if (multerErr) {
+      console.error('  ❌ Multer error:', multerErr.message);
+      return res.status(400).json({ error: 'Upload error: ' + multerErr.message });
     }
+    try {
+      const products = readJSON(PRODUCTS_FILE);
+      const idx = products.findIndex(p => p.id === req.params.id);
+      if (idx === -1) return res.status(404).json({ error: 'Product not found' });
 
-    const allImages = [...existingImages, ...uploadedImages];
+      const body = req.body;
 
-    // Delete old images that are no longer used
-    const oldImages = products[idx].images || [];
-    oldImages.forEach(img => {
-      if (img.startsWith('/uploads/') && !allImages.includes(img)) {
-        const filePath = path.join(__dirname, img);
-        if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+      // New uploaded images
+      const uploadedImages = (req.files || []).map(f => '/uploads/products/' + f.filename);
+
+      // Existing images to keep (sent from frontend)
+      let existingImages = [];
+      if (body.existingImages) {
+        try { existingImages = JSON.parse(body.existingImages); } catch(e) { existingImages = []; }
       }
-    });
 
-    products[idx] = {
-      ...products[idx],
-      name: body.name || products[idx].name,
-      brand: body.brand || products[idx].brand,
-      price: body.price || products[idx].price,
-      category: body.category || products[idx].category,
-      features: body.features ? (typeof body.features === 'string' ? JSON.parse(body.features) : body.features) : products[idx].features,
-      badge: body.badge !== undefined ? body.badge : products[idx].badge,
-      colors: body.colors ? (typeof body.colors === 'string' ? JSON.parse(body.colors) : body.colors) : products[idx].colors,
-      images: allImages.length > 0 ? allImages : products[idx].images,
-      image: allImages.length > 0 ? allImages[0] : products[idx].image,
-      visible: body.visible !== undefined ? (body.visible === 'true' || body.visible === true) : products[idx].visible
-    };
+      const allImages = [...existingImages, ...uploadedImages];
 
-    writeJSON(PRODUCTS_FILE, products);
-    console.log(`  ✏️  Product updated: "${products[idx].name}"`);
-    res.json({ ok: true, product: products[idx] });
-  } catch (err) {
-    console.error('  ❌ Error updating product:', err.message);
-    res.status(500).json({ error: err.message });
-  }
+      // Delete old images that are no longer used
+      const oldImages = products[idx].images || [];
+      oldImages.forEach(img => {
+        if (img.startsWith('/uploads/') && !allImages.includes(img)) {
+          const filePath = path.join(__dirname, img);
+          if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+        }
+      });
+
+      products[idx] = {
+        ...products[idx],
+        name: body.name || products[idx].name,
+        brand: body.brand || products[idx].brand,
+        price: body.price || products[idx].price,
+        category: body.category || products[idx].category,
+        features: body.features ? (typeof body.features === 'string' ? JSON.parse(body.features) : body.features) : products[idx].features,
+        badge: body.badge !== undefined ? body.badge : products[idx].badge,
+        colors: body.colors ? (typeof body.colors === 'string' ? JSON.parse(body.colors) : body.colors) : products[idx].colors,
+        images: allImages.length > 0 ? allImages : products[idx].images,
+        image: allImages.length > 0 ? allImages[0] : products[idx].image,
+        visible: body.visible !== undefined ? (body.visible === 'true' || body.visible === true) : products[idx].visible
+      };
+
+      writeJSON(PRODUCTS_FILE, products);
+      console.log(`  ✏️  Product updated: "${products[idx].name}"`);
+      res.json({ ok: true, product: products[idx] });
+    } catch (err) {
+      console.error('  ❌ Error updating product:', err.message, err.stack);
+      res.status(500).json({ error: err.message });
+    }
+  });
 });
 
 // PATCH toggle visibility
@@ -380,7 +401,13 @@ app.post('/api/import', (req, res) => {
    GLOBAL ERROR HANDLER
    ═══════════════════════════════════════════════════════════ */
 app.use((err, req, res, next) => {
+  // Handle Multer-specific errors
+  if (err && err.name === 'MulterError') {
+    console.error('🔥 Multer Error:', err.code, err.message);
+    return res.status(400).json({ error: 'File upload error: ' + err.message });
+  }
   console.error('🔥 Server Error:', err.message || err);
+  console.error('🔥 Stack:', err.stack || 'no stack');
   res.status(500).json({ error: err.message || 'Internal Server Error' });
 });
 
