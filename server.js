@@ -4,6 +4,7 @@
    Permanent Storage: MongoDB Atlas + Cloudinary
    ═══════════════════════════════════════════════════════════════ */
 
+require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const multer = require('multer');
@@ -17,7 +18,7 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 /* ── MongoDB Connection ── */
-const MONGODB_URI = 'mongodb+srv://chherkiisneha_db_user:GHEQhjfZN2STLFqO@cluster0.pwwsq99.mongodb.net/?appName=Cluster0';
+const MONGODB_URI = process.env.MONGODB_URI;
 
 mongoose.connect(MONGODB_URI)
   .then(() => console.log('  🍀 Connected to MongoDB Atlas'))
@@ -25,9 +26,9 @@ mongoose.connect(MONGODB_URI)
 
 /* ── Cloudinary Configuration ── */
 cloudinary.config({
-  cloud_name: 'df09qzngv',
-  api_key: '844773478838996',
-  api_secret: 'LUGMhcz_mzkWV6tVHHs5ejAFIbI'
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET
 });
 
 /* ── Mongoose Models ── */
@@ -196,9 +197,6 @@ app.put('/api/products/:id', (req, res) => {
 
       const allImages = [...existingImages, ...uploadedImages];
 
-      // Note: We don't automatically delete from Cloudinary here to keep it simple,
-      // but in a production app you would check which images were removed and use cloudinary.uploader.destroy()
-
       const updateData = {
         name: body.name || product.name,
         brand: body.brand || product.brand,
@@ -245,7 +243,6 @@ app.delete('/api/products/:id', async (req, res) => {
     const product = await Product.findOne({ id: req.params.id });
     if (!product) return res.status(404).json({ error: 'Product not found' });
 
-    // Again, simplified: not deleting from Cloudinary right now
     await Product.deleteOne({ id: req.params.id });
     
     console.log(`  🗑️  Product deleted from DB: "${product.name}"`);
@@ -334,9 +331,6 @@ app.delete('/api/banners/:id', async (req, res) => {
 app.post('/api/banners/reorder', async (req, res) => {
   try {
     const { orderedIds } = req.body;
-    // For reordering in MongoDB without an explicit 'order' field, 
-    // it's tricky. Let's just return a message or implement an order field.
-    // For now, keep it simple.
     res.json({ ok: true, message: 'Reordering saved locally (not fully implemented in DB)' });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -376,5 +370,5 @@ app.post('/api/import', async (req, res) => {
 
 /* ── Start Server ── */
 app.listen(PORT, () => {
-  console.log(`  🚀 Server running on port ${PORT} with Cloud Storage`);
+  console.log(`  🚀 Server running on port ${PORT} with Cloud Storage & Env Vars`);
 });
