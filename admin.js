@@ -13,8 +13,8 @@ if (typeof API_CONFIG === 'undefined') {
     api: (path) => `${BACKEND_URL}${path}`,
     imageUrl: (src) => {
       if (!src) return '';
-      if (src.startsWith('http://') || src.startsWith('https://') || src.startsWith('data:')) return src;
-      return `${BACKEND_URL}${src}`;
+      if (src.startsWith('http://') || src.startsWith('https://') || src.startsWith('data:') || src.startsWith('images/')) return src;
+      return `${BACKEND_URL}${src.startsWith('/') ? '' : '/'}${src}`;
     }
   };
 } else {
@@ -24,8 +24,8 @@ if (typeof API_CONFIG === 'undefined') {
     API_CONFIG.api = (path) => `${BACKEND_URL}${path}`;
     API_CONFIG.imageUrl = (src) => {
       if (!src) return '';
-      if (src.startsWith('http://') || src.startsWith('https://') || src.startsWith('data:')) return src;
-      return `${BACKEND_URL}${src}`;
+      if (src.startsWith('http://') || src.startsWith('https://') || src.startsWith('data:') || src.startsWith('images/')) return src;
+      return `${BACKEND_URL}${src.startsWith('/') ? '' : '/'}${src}`;
     };
   }
 }

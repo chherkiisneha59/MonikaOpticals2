@@ -19,10 +19,10 @@ const API_CONFIG = (() => {
     // If it's already an absolute URL (https://...), return as-is
     imageUrl: (src) => {
       if (!src) return '';
-      if (src.startsWith('http://') || src.startsWith('https://') || src.startsWith('data:')) {
+      if (src.startsWith('http://') || src.startsWith('https://') || src.startsWith('data:') || src.startsWith('images/')) {
         return src;
       }
-      return `${BACKEND_URL}${src}`;
+      return `${BACKEND_URL}${src.startsWith('/') ? '' : '/'}${src}`;
     }
   };
 })();
