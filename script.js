@@ -3,6 +3,19 @@
    Enhanced scroll animations, parallax, counters, nav, marquees
    ═══════════════════════════════════════════════════════════════ */
 
+/* ── Inline API Config fallback ── */
+if (typeof API_CONFIG === 'undefined') {
+  var API_CONFIG = {
+    BASE_URL: 'https://monikaopticals2-1.onrender.com',
+    api: (path) => `https://monikaopticals2-1.onrender.com${path}`,
+    imageUrl: (src) => {
+      if (!src) return '';
+      if (src.startsWith('http://') || src.startsWith('https://') || src.startsWith('data:')) return src;
+      return `https://monikaopticals2-1.onrender.com${src}`;
+    }
+  };
+}
+
 document.addEventListener('DOMContentLoaded', async () => {
 
   /* ── Navbar scroll effect ── */

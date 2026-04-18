@@ -1,10 +1,14 @@
+node_modules/
 package.json
 package-lock.json
 server.js
 test_upload.js
+test.js
+test.py
 fetch_vercel.js
 check_vercel.js
 check_github.js
 check_vercel_now.js
+diagnose.js
 data/
 uploads/

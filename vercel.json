@@ -1,1 +1,16 @@
-{}
+{
+  "buildCommand": "echo done",
+  "outputDirectory": ".",
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        { "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" }
+      ]
+    }
+  ],
+  "rewrites": [
+    { "source": "/api/:path*", "destination": "https://monikaopticals2-1.onrender.com/api/:path*" },
+    { "source": "/uploads/:path*", "destination": "https://monikaopticals2-1.onrender.com/uploads/:path*" }
+  ]
+}

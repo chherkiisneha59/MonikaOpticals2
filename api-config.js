@@ -1,10 +1,11 @@
 /* ═══════════════════════════════════════════════════════════════
    API Configuration — Single source of truth for backend URL
    Frontend (Vercel) ↔ Backend (Render) connection
+   Version: 4.0 — Direct backend calls (no proxy/rewrite)
    ═══════════════════════════════════════════════════════════════ */
 
 const API_CONFIG = (() => {
-  // Backend URL on Render
+  // Backend URL on Render — ALL API calls go directly here
   const BACKEND_URL = 'https://monikaopticals2-1.onrender.com';
 
   return {

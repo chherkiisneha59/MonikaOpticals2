@@ -4,6 +4,19 @@
    Only shows products the admin has added/uploaded
    ═══════════════════════════════════════════════════════════════ */
 
+/* ── Inline API Config fallback ── */
+if (typeof API_CONFIG === 'undefined') {
+  var API_CONFIG = {
+    BASE_URL: 'https://monikaopticals2-1.onrender.com',
+    api: (path) => `https://monikaopticals2-1.onrender.com${path}`,
+    imageUrl: (src) => {
+      if (!src) return '';
+      if (src.startsWith('http://') || src.startsWith('https://') || src.startsWith('data:')) return src;
+      return `https://monikaopticals2-1.onrender.com${src}`;
+    }
+  };
+}
+
 const CATEGORY_META = {
   all:        { title: 'All Eyewear', desc: 'Browse our full range of premium eyewear, precision-fitted using our special automatic machines.' },
   sunglasses: { title: 'Sunglasses', desc: 'Premium UV-protected sunglasses for every style. From aviators to cat-eyes, curated from top global brands.' },

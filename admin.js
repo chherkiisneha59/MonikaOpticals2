@@ -2,8 +2,33 @@
    Monika Opticals — Admin Panel Frontend
    Full CRUD, Banner Manager, Display Control, Frame Colors
    Uses Express REST API backend with Multer file uploads
-   Version 2.0.1
+   Version 4.0.0 — Direct Render backend calls
    ═══════════════════════════════════════════════════════════════ */
+
+/* ── Inline API Config (fallback if api-config.js fails to load) ── */
+const BACKEND_URL = 'https://monikaopticals2-1.onrender.com';
+if (typeof API_CONFIG === 'undefined') {
+  var API_CONFIG = {
+    BASE_URL: BACKEND_URL,
+    api: (path) => `${BACKEND_URL}${path}`,
+    imageUrl: (src) => {
+      if (!src) return '';
+      if (src.startsWith('http://') || src.startsWith('https://') || src.startsWith('data:')) return src;
+      return `${BACKEND_URL}${src}`;
+    }
+  };
+} else {
+  // Ensure API_CONFIG always points to the Render backend, not the Vercel domain
+  if (API_CONFIG.BASE_URL && API_CONFIG.BASE_URL.includes('vercel.app')) {
+    API_CONFIG.BASE_URL = BACKEND_URL;
+    API_CONFIG.api = (path) => `${BACKEND_URL}${path}`;
+    API_CONFIG.imageUrl = (src) => {
+      if (!src) return '';
+      if (src.startsWith('http://') || src.startsWith('https://') || src.startsWith('data:')) return src;
+      return `${BACKEND_URL}${src}`;
+    };
+  }
+}
 
 const ADMIN_PASSWORD = 'monika1980';
 
@@ -322,8 +347,8 @@ async function handleFormSubmit(e) {
       showToast(data.error || 'Failed to save product.', 'error');
     }
   } catch (err) {
-    alert('EXACT ERROR WAS: ' + err.message + ' | ' + err.stack);
-    showToast('Server error. Please try again.', 'error');
+    console.error('Product save error:', err.message, err.stack);
+    showToast('Server error: ' + err.message, 'error');
   }
 }
 

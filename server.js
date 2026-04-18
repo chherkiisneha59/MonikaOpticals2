@@ -31,8 +31,17 @@ if (!fs.existsSync(BANNERS_FILE))  fs.writeFileSync(BANNERS_FILE, '[]', 'utf-8')
 
 /* ── Middleware ── */
 
-// CORS — allow all origins to prevent Vercel domain mismatches
-app.use(cors());
+// CORS — allow Vercel frontend and all origins
+app.use(cors({
+  origin: true,  // Allow all origins (Vercel domain may change)
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+  credentials: true,
+  maxAge: 86400  // Cache preflight for 24 hours
+}));
+
+// Handle preflight OPTIONS requests explicitly
+app.options('*', cors());
 
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
