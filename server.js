@@ -24,6 +24,14 @@ mongoose.connect(MONGODB_URI)
   .then(() => console.log('  🍀 Connected to MongoDB Atlas'))
   .catch(err => console.error('  ❌ MongoDB connection error:', err));
 
+mongoose.connection.on('error', err => {
+  console.error('  🔥 Mongoose default connection error:', err);
+});
+
+mongoose.connection.on('connected', () => {
+  console.log('  ✅ Mongoose default connection open');
+});
+
 /* ── Cloudinary Configuration ── */
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
