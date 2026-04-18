@@ -8,7 +8,7 @@
 /* ── Inline API Config (fallback if api-config.js fails to load) ── */
 const BACKEND_URL = 'https://monikaopticals2-1.onrender.com';
 if (typeof API_CONFIG === 'undefined') {
-  var API_CONFIG = {
+  window.API_CONFIG = {
     BASE_URL: BACKEND_URL,
     api: (path) => `${BACKEND_URL}${path}`,
     imageUrl: (src) => {

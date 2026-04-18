@@ -6,7 +6,7 @@
 
 /* ── Inline API Config fallback ── */
 if (typeof API_CONFIG === 'undefined') {
-  var API_CONFIG = {
+  window.API_CONFIG = {
     BASE_URL: 'https://monikaopticals2-1.onrender.com',
     api: (path) => `https://monikaopticals2-1.onrender.com${path}`,
     imageUrl: (src) => {
