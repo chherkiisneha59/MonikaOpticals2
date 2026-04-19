@@ -1,25 +1,10 @@
 {
   "buildCommand": "echo done",
   "outputDirectory": ".",
-  "headers": [
-    {
-      "source": "/(.*)",
-      "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "no-cache, no-store, must-revalidate"
-        }
-      ]
-    }
-  ],
   "rewrites": [
     {
       "source": "/api/:path*",
       "destination": "https://monikaopticals2-nr5i.onrender.com/api/:path*"
-    },
-    {
-      "source": "/uploads/:path*",
-      "destination": "https://monikaopticals2-nr5i.onrender.com/uploads/:path*"
     }
   ]
 }
