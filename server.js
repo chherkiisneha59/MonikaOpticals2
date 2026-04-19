@@ -167,9 +167,22 @@ app.post('/api/products', upload.array('images', 6), async (req, res) => {
       visible: body.visible !== undefined ? (body.visible === 'true' || body.visible === true) : true
     };
 
+    // Ensure these are arrays for Supabase JSONB columns
+    const finalFeatures = Array.isArray(productData.features) ? productData.features : [];
+    const finalColors = Array.isArray(productData.colors) ? productData.colors : [];
+    const finalImages = Array.isArray(allImages) ? allImages : [];
+
+    const cleanProductData = {
+      ...productData,
+      features: finalFeatures,
+      colors: finalColors,
+      images: finalImages,
+      image: finalImages[0] || ''
+    };
+
     const { data, error } = await supabase
       .from('products')
-      .insert([productData])
+      .insert([cleanProductData])
       .select();
 
     if (error) {
@@ -298,7 +311,10 @@ app.post('/api/banners', upload.single('image'), async (req, res) => {
     };
 
     const { data, error } = await supabase.from('banners').insert([bannerData]).select();
-    if (error) throw error;
+    if (error) {
+      console.error('  ❌ Banner Insert Error:', error.message);
+      throw new Error(`Banner Database Error: ${error.message}`);
+    }
     res.json({ ok: true, banner: data[0] });
   } catch (err) {
     res.status(500).json({ error: err.message });
