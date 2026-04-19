@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>NUCLEAR REPAIR TOOL — Monika Opticals</title>
+    <style>
+        body { font-family: sans-serif; background: #111; color: #fff; padding: 40px; text-align: center; }
+        .card { background: #222; padding: 40px; border-radius: 20px; border: 1px solid #444; max-width: 500px; margin: auto; }
+        h1 { color: #00d2ff; }
+        .status { padding: 15px; margin: 20px 0; border-radius: 10px; font-weight: bold; }
+        .ok { background: #1b4d3e; color: #2ecc71; }
+        .err { background: #4d1b1b; color: #e74c3c; }
+        button { background: #00d2ff; color: #000; border: none; padding: 15px 30px; border-radius: 10px; font-weight: bold; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h1>🛠️ Backend Repair Tool</h1>
+        <p>Testing connection to <strong>monikaopticals2-nr5i.onrender.com</strong></p>
+        
+        <div id="status" class="status">Testing Connection...</div>
+        
+        <p>If you see "Connected" below, your backend is working perfectly and the issue is just Vercel caching old files.</p>
+        
+        <button onclick="check()">Re-test Connection</button>
+        <br><br>
+        <a href="admin.html" style="color: #00d2ff;">Go back to Admin</a>
+    </div>
+
+    <script>
+        async function check() {
+            const status = document.getElementById('status');
+            status.className = 'status';
+            status.innerText = 'Testing...';
+            
+            try {
+                const res = await fetch('https://monikaopticals2-nr5i.onrender.com/api/debug-supabase');
+                const data = await res.json();
+                
+                if (data.database && data.database.productsTable === 'OK') {
+                    status.className = 'status ok';
+                    status.innerText = '✅ SUCCESS: Backend is healthy and Supabase is connected!';
+                } else {
+                    status.className = 'status err';
+                    status.innerText = '❌ ERROR: Backend is live but Supabase setup is wrong: ' + JSON.stringify(data);
+                }
+            } catch (err) {
+                status.className = 'status err';
+                status.innerText = '❌ ERROR: Could not reach Render backend. Check your Render Dashboard logs!';
+            }
+        }
+        check();
+    </script>
+</body>
+</html>
