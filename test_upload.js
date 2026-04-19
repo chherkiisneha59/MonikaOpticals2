@@ -15,7 +15,7 @@ async function run() {
 
   console.log('Sending request to Render...');
   try {
-    const res = await fetch('https://monikaopticals2-1.onrender.com/api/products', {
+    const res = await fetch('https://monikaopticals2-nr5i.onrender.com/api/products', {
       method: 'POST',
       body: form
     });

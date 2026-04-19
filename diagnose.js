@@ -28,7 +28,7 @@ async function main() {
   console.log('\nadmin.js status:', adminJs.status);
   console.log('admin.js length:', adminJs.body.length, 'bytes');
   console.log('Has API_CONFIG:', adminJs.body.includes('API_CONFIG'));
-  console.log('Has BACKEND_URL:', adminJs.body.includes('monikaopticals2-1.onrender.com'));
+  console.log('Has BACKEND_URL:', adminJs.body.includes('monikaopticals2-nr5i.onrender.com'));
   console.log('Has Version 3.0:', adminJs.body.includes('Version 3.0'));
   
   // Show first 500 chars

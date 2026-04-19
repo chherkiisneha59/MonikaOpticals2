@@ -6,12 +6,12 @@
 /* ── Inline API Config fallback ── */
 if (typeof API_CONFIG === 'undefined') {
   window.API_CONFIG = {
-    BASE_URL: 'https://monikaopticals2-1.onrender.com',
-    api: (path) => `https://monikaopticals2-1.onrender.com${path}`,
+    BASE_URL: 'https://monikaopticals2-nr5i.onrender.com',
+    api: (path) => `https://monikaopticals2-nr5i.onrender.com${path}`,
     imageUrl: (src) => {
       if (!src) return '';
       if (src.startsWith('http://') || src.startsWith('https://') || src.startsWith('data:') || src.startsWith('images/')) return src;
-      return `https://monikaopticals2-1.onrender.com${src.startsWith('/') ? '' : '/'}${src}`;
+      return `https://monikaopticals2-nr5i.onrender.com${src.startsWith('/') ? '' : '/'}${src}`;
     }
   };
 }
