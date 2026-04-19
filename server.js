@@ -142,8 +142,10 @@ app.post('/api/products', upload.array('images', 6), async (req, res) => {
     const body = req.body;
     const files = req.files || [];
     
+    const category = body.category ? body.category.toLowerCase().replace(/[^a-z0-9]/g, '_') : 'uncategorized';
+    
     const uploadedImages = await Promise.all(
-      files.map(file => uploadToSupabase(file, 'monika-opticals', 'products'))
+      files.map(file => uploadToSupabase(file, 'monika-opticals', `products/${category}`))
     );
     
     let existingImages = [];
