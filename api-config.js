@@ -6,7 +6,7 @@
 
 const API_CONFIG = (() => {
   // Backend URL on Render — ALL API calls go directly here
-  const BACKEND_URL = 'https://monikaopticals2-1.onrender.com';
+  const BACKEND_URL = 'https://monikaopticals2-nr5i.onrender.com';
 
   return {
     // Base backend URL (no trailing slash)

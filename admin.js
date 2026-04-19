@@ -6,7 +6,7 @@
    ═══════════════════════════════════════════════════════════════ */
 
 /* ── Inline API Config (fallback if api-config.js fails to load) ── */
-const BACKEND_URL = 'https://monikaopticals2-1.onrender.com';
+const BACKEND_URL = 'https://monikaopticals2-nr5i.onrender.com';
 if (typeof API_CONFIG === 'undefined') {
   window.API_CONFIG = {
     BASE_URL: BACKEND_URL,
@@ -581,7 +581,8 @@ function renderBanners() {
         </div>
       </div>
     </div>
-  `;}).join('');
+  `;
+  }).join('');
 }
 
 async function toggleBannerVisibility(id) {
@@ -621,7 +622,7 @@ async function updateBannerAlt(id, value) {
   const idx = banners.findIndex(b => b.id === id);
   if (idx !== -1) {
     banners[idx].alt = value;
-    try { await fetch(API_CONFIG.api(`/api/banners/${id}`), { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ alt: value }) }); } catch(e) {}
+    try { await fetch(API_CONFIG.api(`/api/banners/${id}`), { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ alt: value }) }); } catch (e) { }
   }
 }
 
