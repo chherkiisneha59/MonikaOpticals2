@@ -9,12 +9,12 @@
 const BACKEND_URL = 'https://monikaopticals2-nr5i.onrender.com';
 if (typeof API_CONFIG === 'undefined') {
   window.API_CONFIG = {
-    BASE_URL: BACKEND_URL,
-    api: (path) => `${BACKEND_URL}${path}`,
+    BASE_URL: 'https://monikaopticals2-nr5i.onrender.com',
+    api: (path) => `https://monikaopticals2-nr5i.onrender.com${path.startsWith('/') ? '' : '/'}${path}`,
     imageUrl: (src) => {
       if (!src) return '';
       if (src.startsWith('http://') || src.startsWith('https://') || src.startsWith('data:') || src.startsWith('images/')) return src;
-      return `${BACKEND_URL}${src.startsWith('/') ? '' : '/'}${src}`;
+      return `https://monikaopticals2-nr5i.onrender.com${src.startsWith('/') ? '' : '/'}${src}`;
     }
   };
 } else {
