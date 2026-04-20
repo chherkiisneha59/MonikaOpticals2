@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Collection — Monika Opticals | Vidisha</title>
+  <meta name="description" content="Browse our premium eyewear collection. Sunglasses, reading glasses, computer glasses, sports eyewear, kids eyewear & contact lenses from top global brands." />
+  <link rel="stylesheet" href="style.css" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>👓</text></svg>" />
+</head>
+<body>
+
+  <!-- ═══════════ NAVBAR ═══════════ -->
+  <nav class="navbar scrolled" id="navbar">
+    <a href="index.html" class="navbar__logo">Monika <span>Opticals</span></a>
+    <ul class="navbar__links">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="collection.html?cat=sunglasses" data-cat="sunglasses">Sunglasses</a></li>
+      <li><a href="collection.html?cat=reading" data-cat="reading">Reading</a></li>
+      <li><a href="collection.html?cat=computer" data-cat="computer">Computer</a></li>
+      <li><a href="collection.html?cat=sports" data-cat="sports">Sports</a></li>
+    </ul>
+    <a href="tel:+918109204075" class="navbar__phone">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2A19.79 19.79 0 0 1 3.09 5.18 2 2 0 0 1 5.08 3h3a2 2 0 0 1 2 1.72c.13.81.37 1.6.68 2.35a2 2 0 0 1-.45 2.11L8.89 10.6a16 16 0 0 0 6.51 6.51l1.42-1.42a2 2 0 0 1 2.11-.45c.75.31 1.54.55 2.35.68A2 2 0 0 1 22 16.92z"/></svg>
+      +91 8109204075
+    </a>
+    <button class="navbar__hamburger" id="hamburger-btn" aria-label="Open menu">
+      <span></span><span></span><span></span>
+    </button>
+  </nav>
+
+  <!-- ═══════════ MOBILE NAV ═══════════ -->
+  <div class="mobile-nav" id="mobile-nav">
+    <button class="mobile-nav__close" id="mobile-nav-close" aria-label="Close menu">&times;</button>
+    <a href="index.html">Home</a>
+    <a href="collection.html?cat=sunglasses">Sunglasses</a>
+    <a href="collection.html?cat=reading">Reading</a>
+    <a href="collection.html?cat=computer">Computer</a>
+    <a href="collection.html?cat=sports">Sports</a>
+    <a href="tel:+918109204075">+91 8109204075</a>
+  </div>
+
+  <!-- ═══════════ COLLECTION HERO ═══════════ -->
+  <section class="col-hero" id="col-hero">
+    <div class="col-hero__inner">
+      <a href="index.html" class="col-hero__back">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+        Back to Home
+      </a>
+      <p class="col-hero__label">Our Collection</p>
+      <h1 class="col-hero__title" id="col-title">All Eyewear</h1>
+      <p class="col-hero__desc" id="col-desc">Browse our full range of premium eyewear, precision-fitted using our special automatic machines.</p>
+    </div>
+  </section>
+
+  <!-- ═══════════ CATEGORY FILTER TABS ═══════════ -->
+  <div class="col-filters" id="col-filters">
+    <div class="col-filters__inner">
+      <button class="col-filter-btn active" data-filter="all">All</button>
+      <button class="col-filter-btn" data-filter="sunglasses">Sunglasses</button>
+      <button class="col-filter-btn" data-filter="reading">Reading</button>
+      <button class="col-filter-btn" data-filter="computer">Computer</button>
+      <button class="col-filter-btn" data-filter="sports">Sports</button>
+      <button class="col-filter-btn" data-filter="kids">Kids</button>
+      <button class="col-filter-btn" data-filter="contacts">Contacts</button>
+    </div>
+  </div>
+
+  <!-- ═══════════ PRODUCT GRID ═══════════ -->
+  <section class="col-products" id="col-products">
+    <div class="col-products__grid" id="products-grid">
+      <!-- Products injected by JS -->
+    </div>
+  </section>
+
+  <!-- ═══════════ CTA BANNER ═══════════ -->
+  <section class="col-cta">
+    <div class="col-cta__inner">
+      <h2 class="col-cta__title">Can't find what you're looking for?</h2>
+      <p class="col-cta__desc">Visit our store or chat with us on WhatsApp. We carry 200+ frame styles from top global brands.</p>
+      <div class="col-cta__buttons">
+        <a href="https://wa.me/918109204075?text=Hello%20I%20want%20to%20visit%20your%20store." target="_blank" rel="noopener" class="btn btn--whatsapp">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+          Chat with Us
+        </a>
+        <a href="https://maps.google.com/?q=Monika+Opticals+Vidisha" target="_blank" rel="noopener" class="btn btn--primary">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          Visit Our Store
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════ FOOTER ═══════════ -->
+  <footer class="footer" id="footer">
+    <div class="footer__inner">
+      <div>
+        <div class="footer__brand-name">Monika <span>Opticals</span></div>
+        <p class="footer__brand-desc">Serving Vidisha with precision eyecare since 1980. Trusted by 50,000+ customers. Your vision, our legacy.</p>
+        <a href="https://wa.me/918109204075?text=Hello%20I%20want%20to%20visit%20your%20store." target="_blank" rel="noopener" class="footer__whatsapp">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+          Chat on WhatsApp
+        </a>
+      </div>
+      <div>
+        <h4 class="footer__heading">Quick Links</h4>
+        <ul class="footer__links">
+          <li><a href="collection.html?cat=sunglasses">Sunglasses</a></li>
+          <li><a href="collection.html?cat=reading">Reading Glasses</a></li>
+          <li><a href="collection.html?cat=computer">Computer Glasses</a></li>
+          <li><a href="collection.html?cat=sports">Sports Eyewear</a></li>
+          <li><a href="collection.html?cat=kids">Kids Eyewear</a></li>
+          <li><a href="collection.html?cat=contacts">Contact Lenses</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4 class="footer__heading">Contact Us</h4>
+        <div class="footer__contact-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          <span>Civil Lines, Vidisha, Madhya Pradesh 464001</span>
+        </div>
+        <div class="footer__contact-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2A19.79 19.79 0 0 1 3.09 5.18 2 2 0 0 1 5.08 3h3a2 2 0 0 1 2 1.72c.13.81.37 1.6.68 2.35a2 2 0 0 1-.45 2.11L8.89 10.6a16 16 0 0 0 6.51 6.51l1.42-1.42a2 2 0 0 1 2.11-.45c.75.31 1.54.55 2.35.68A2 2 0 0 1 22 16.92z"/></svg>
+          <span>+91 8109204075</span>
+        </div>
+        <div class="footer__contact-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          <span>Mon – Sat: 10AM – 8PM</span>
+        </div>
+        <div class="footer__contact-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+          <span>info@monikaopticals.com</span>
+        </div>
+      </div>
+      <div>
+        <h4 class="footer__heading">Find Us</h4>
+        <a href="https://maps.google.com/?q=Monika+Opticals+Vidisha" target="_blank" rel="noopener" class="footer__directions">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+          Get Directions
+        </a>
+      </div>
+    </div>
+    <div class="footer__bottom">
+      <span>&copy; 2026 Monika Opticals, Vidisha. All rights reserved.</span>
+      <div class="footer__seo-links">
+        <span>Best Opticals in Vidisha</span>
+        <span>Monika Opticals Civil Lines</span>
+        <span>Eye Testing in Vidisha</span>
+        <span>Spectacle Shop Near Me</span>
+        <a href="admin.html" class="footer__admin-link">Admin</a>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Floating Admin Button -->
+  <a href="admin.html" class="admin-fab" title="Admin Panel">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+  </a>
+
+  <script src="api-config.js?v=4.1.0"></script>
+  <script src="collection.js?v=4.1.0"></script>
+</body>
+</html>
