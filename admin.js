@@ -5,30 +5,6 @@
    Version 4.0.0 — Direct Render backend calls
    ═══════════════════════════════════════════════════════════════ */
 
-/* ── Inline API Config (fallback if api-config.js fails to load) ── */
-const BACKEND_URL = 'https://monikaopticals2-nr5i.onrender.com';
-if (typeof API_CONFIG === 'undefined') {
-  window.API_CONFIG = {
-    BASE_URL: 'https://monikaopticals2-nr5i.onrender.com',
-    api: (path) => `https://monikaopticals2-nr5i.onrender.com${path.startsWith('/') ? '' : '/'}${path}`,
-    imageUrl: (src) => {
-      if (!src) return '';
-      if (src.startsWith('http://') || src.startsWith('https://') || src.startsWith('data:') || src.startsWith('images/')) return src;
-      return `https://monikaopticals2-nr5i.onrender.com${src.startsWith('/') ? '' : '/'}${src}`;
-    }
-  };
-} else {
-  // Ensure API_CONFIG always points to the Render backend, not the Vercel domain
-  if (API_CONFIG.BASE_URL && API_CONFIG.BASE_URL.includes('vercel.app')) {
-    API_CONFIG.BASE_URL = BACKEND_URL;
-    API_CONFIG.api = (path) => `${BACKEND_URL}${path}`;
-    API_CONFIG.imageUrl = (src) => {
-      if (!src) return '';
-      if (src.startsWith('http://') || src.startsWith('https://') || src.startsWith('data:') || src.startsWith('images/')) return src;
-      return `${BACKEND_URL}${src.startsWith('/') ? '' : '/'}${src}`;
-    };
-  }
-}
 
 const ADMIN_PASSWORD = 'monika1980';
 
