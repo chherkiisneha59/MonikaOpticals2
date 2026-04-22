@@ -1,8 +1,8 @@
 /* ═══════════════════════════════════════════════════════════════
-   Monika Opticals — Virtual Try-On Logic (IndexSizeError Fix)
-   - Robust stick removal that protects thin nose bridges
-   - Color-Camera enforcement
-   - 2.0x Standardized fit
+   Monika Opticals — Virtual Try-On Logic (Master Fit)
+   - Intelligent Hinge-Jump detection (Preserves full frames)
+   - Real-time Head Rotation & Mirror-Corrected Tilt
+   - Optimized Lenskart-style 2.1x scaling
    ═══════════════════════════════════════════════════════════════ */
 
 const VTO = {
@@ -30,19 +30,19 @@ const VTO = {
     document.getElementById('vto-close').addEventListener('click', () => this.close());
     document.getElementById('vto-zoom-in').addEventListener('click', () => { this.zoomOffset += 2; });
     document.getElementById('vto-zoom-out').addEventListener('click', () => { this.zoomOffset -= 2; });
+    this.modal.addEventListener('click', (e) => { if (e.target === this.modal) this.close(); });
   },
 
   async open(src, name) {
     this.prodName.textContent = name;
     this.loading.style.display = 'block';
-    this.loading.textContent = "Adjusting fits...";
+    this.loading.textContent = "Analyzing frames...";
+    this.zoomOffset = 0;
     try {
-        const processed = await this.processImage(src);
-        this.overlay.src = processed;
+        this.overlay.src = await this.intelligentCrop(src);
         this.overlay.style.display = 'none';
         this.modal.classList.add('active');
         this.isActive = true;
-
         this.stream = await navigator.mediaDevices.getUserMedia({
             video: { facingMode: "user", width: { ideal: 1280 }, height: { ideal: 720 } }
         });
@@ -54,15 +54,14 @@ const VTO = {
 
   startTracking() {
     const loop = async () => {
-        if (this.isActive && this.video.readyState >= 2) {
-            await this.faceMesh.send({ image: this.video });
-        }
+        if (this.isActive && this.video.readyState >= 2) { await this.faceMesh.send({ image: this.video }); }
         if (this.isActive) requestAnimationFrame(loop);
     };
     loop();
   },
 
-  async processImage(src) {
+  // INTELLIGENT CROP: Finds the "Hinge Jump" to remove sticks but keep 100% of the frame
+  async intelligentCrop(src) {
     return new Promise((resolve) => {
       const img = new Image();
       img.crossOrigin = "anonymous";
@@ -73,32 +72,39 @@ const VTO = {
         ctx.drawImage(img, 0, 0);
         const data = ctx.getImageData(0, 0, img.width, img.height).data;
 
-        // 1. Find the bounds of the entire glasses object
-        let minX = img.width, maxX = 0, minY = img.height, maxY = 0;
-        for (let y = 0; y < img.height; y++) {
-          for (let x = 0; x < img.width; x++) {
+        // 1. Calculate Vertical Density for every column X
+        const heights = new Array(img.width).fill(0);
+        for (let x = 0; x < img.width; x++) {
+          for (let y = 0; y < img.height; y++) {
             const i = (y * img.width + x) * 4;
-            if (data[i] < 242 || data[i+1] < 242 || data[i+2] < 242) {
-              if (x < minX) minX = x; if (x > maxX) maxX = x;
-              if (y < minY) minY = y; if (y > maxY) maxY = y;
-            }
+            if (data[i] < 240 || data[i+1] < 240 || data[i+2] < 240) heights[x]++;
           }
         }
 
-        // 2. Safe Cropping: Take the middle 66% of the object to remove sticks
-        const objW = maxX - minX;
-        const objH = maxY - minY;
-        if (objW <= 10 || objH <= 10) return resolve(src); // Safety fallback
+        // 2. Find Hinge Jump: Starting from center, look for where height drops SIGNIFICANTLY
+        const middle = Math.floor(img.width / 2);
+        const centerHeight = heights[middle] || 10;
+        let leftLimit = 0, rightLimit = img.width;
 
-        const cropX = minX + (objW * 0.17); // 17% crop on left
-        const cropW = objW * 0.66;          // Keep center 66%
+        // Scan Left: Stop only when we find a "Stick" (very thin) or nothing
+        for (let x = middle; x > 0; x--) {
+          if (heights[x] < 5) { leftLimit = x; break; }
+          // If height drops to 40% of center height, it's likely the beginning of the stick
+          if (heights[x] < centerHeight * 0.4) { leftLimit = x; break; }
+        }
+        // Scan Right
+        for (let x = middle; x < img.width; x++) {
+          if (heights[x] < 5) { rightLimit = x; break; }
+          if (heights[x] < centerHeight * 0.4) { rightLimit = x; break; }
+        }
+
+        const w = rightLimit - leftLimit;
+        if (w <= 10) return resolve(src);
 
         const out = document.createElement("canvas");
-        out.width = cropW; out.height = objH;
+        out.width = w; out.height = img.height;
         const octx = out.getContext("2d");
-        octx.drawImage(img, cropX, minY, cropW, objH, 0, 0, cropW, objH);
-
-        // 3. Transparent background removal
+        octx.drawImage(img, leftLimit, 0, w, img.height, 0, 0, w, img.height);
         const od = octx.getImageData(0, 0, out.width, out.height);
         const p = od.data;
         for (let i = 0; i < p.length; i += 4) {
@@ -116,14 +122,18 @@ const VTO = {
       const lm = results.multiFaceLandmarks[0];
       const left = lm[468], right = lm[473], nose = lm[6];
       const midX = (left.x + right.x) / 2, midY = nose.y;
-      const angle = Math.atan2(right.y - left.y, right.x - left.x) * (180 / Math.PI);
-      const dist = Math.sqrt(Math.pow(right.y - left.y, 2) + Math.pow(right.x - left.x, 2));
 
-      // 2.0x Scaled Fit
-      const w = (dist * 2.0 * 100) + this.zoomOffset;
+      // Rotation Tilt (Angle between eyes)
+      // Since video is mirrored, we use the raw angle
+      const angle = Math.atan2(right.y - left.y, right.x - left.x) * (180 / Math.PI);
+      const dist = Math.sqrt(Math.pow(right.x - left.x, 2) + Math.pow(right.y - left.y, 2));
+
+      const w = (dist * 2.1 * 100) + this.zoomOffset;
       this.overlay.style.left = `${(1 - midX) * 100}%`;
       this.overlay.style.top = `${midY * 100}%`;
       this.overlay.style.width = w + '%';
+      
+      // ROTATION: Applied with negative angle for mirror correction
       this.overlay.style.transform = `translate(-50%, -46%) rotate(${-angle}deg)`;
       this.overlay.style.display = 'block';
       this.loading.style.display = 'none';
