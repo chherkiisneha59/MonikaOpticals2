@@ -1,8 +1,8 @@
 /* ═══════════════════════════════════════════════════════════════
-   Monika Opticals — Virtual Try-On Logic (Perfect Fit)
-   - Removes side temples (sticks) automatically
-   - Anchor to nose bridge for realism
-   - Auto-scaling based on face depth
+   Monika Opticals — Virtual Try-On Logic (Smart Fit)
+   - Aggressive auto-crop to remove temples (sticks)
+   - Real-world scaling (Lenskart-style 2.2x ratio)
+   - Nose bridge anchoring
    ═══════════════════════════════════════════════════════════════ */
 
 const VTO = {
@@ -12,7 +12,7 @@ const VTO = {
   faceMesh: null,
   camera: null,
   isActive: false,
-  zoomOffset: 2, // Slight default zoom for better fit
+  zoomOffset: 0,
 
   init() {
     this.modal = document.getElementById('vto-modal');
@@ -36,7 +36,6 @@ const VTO = {
 
     this.faceMesh.onResults((results) => this.onResults(results));
 
-    // Handle clicks from dynamic product cards
     document.addEventListener('click', (e) => {
       const btn = e.target.closest('.btn--try-on');
       if (btn) this.open(btn.dataset.img, btn.dataset.vto);
@@ -48,14 +47,14 @@ const VTO = {
     this.modal.addEventListener('click', (e) => { if (e.target === this.modal) this.close(); });
   },
 
-  async open(imgSrc, name) {
+  async open(originalImgSrc, name) {
     this.prodName.textContent = name;
     this.loading.style.display = 'block';
-    this.loading.textContent = "Adjusting frames...";
+    this.loading.textContent = "Fitting frames...";
+    this.zoomOffset = 0; // Reset
     
     try {
-        // Process image: Remove white background AND Crop the side "sticks"
-        const finalImg = await this.processGlassesImage(imgSrc);
+        const finalImg = await this.smartCropGlasses(originalImgSrc);
         this.overlay.src = finalImg;
         this.overlay.style.display = 'none';
         this.modal.classList.add('active');
@@ -68,42 +67,70 @@ const VTO = {
             });
         }
         await this.camera.start();
-        this.loading.textContent = "Tracking face...";
     } catch (err) {
         console.error("VTO Error", err);
         this.close();
     }
   },
 
-  // NEW LOGIC: Removes white background + Crops 15% from left/right to hide temples
-  async processGlassesImage(src) {
+  // SMART CROP: Finds the frame and cuts off the arms/sticks
+  async smartCropGlasses(src) {
     return new Promise((resolve) => {
       const img = new Image();
       img.crossOrigin = "anonymous";
       img.onload = () => {
         const canvas = document.createElement("canvas");
         const ctx = canvas.getContext("2d");
-        
-        // Define crop (remove 15% from left and 15% from right)
-        const cropX = img.width * 0.15;
-        const cropWidth = img.width * 0.70;
-        
-        canvas.width = cropWidth;
+        canvas.width = img.width;
         canvas.height = img.height;
-
-        // Draw only the center part of the glasses (hides the arms/sticks)
-        ctx.drawImage(img, cropX, 0, cropWidth, img.height, 0, 0, cropWidth, img.height);
+        ctx.drawImage(img, 0, 0);
 
         const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
         const data = imgData.data;
 
-        for (let i = 0; i < data.length; i += 4) {
-          if (data[i] > 230 && data[i+1] > 230 && data[i+2] > 230) {
-            data[i+3] = 0; // Make white transparent
+        // 1. Find boundaries of the glasses frame (ignoring white space)
+        let minX = img.width, maxX = 0, minY = img.height, maxY = 0;
+        
+        for (let y = 0; y < img.height; y++) {
+          for (let x = 0; x < img.width; x++) {
+            const i = (y * img.width + x) * 4;
+            // If pixel is NOT white (darker frames)
+            if (data[i] < 240 || data[i+1] < 240 || data[i+2] < 240) {
+              if (x < minX) minX = x;
+              if (x > maxX) maxX = x;
+              if (y < minY) minY = y;
+              if (y > maxY) maxY = y;
+            }
           }
         }
-        ctx.putImageData(imgData, 0, 0);
-        resolve(canvas.toDataURL());
+
+        // 2. Remove the "sticks" (usually at least 15% of the total frame width on each side)
+        const frameWidth = maxX - minX;
+        const stickCutoff = frameWidth * 0.18; // Aggressive cut
+        const finalMinX = minX + stickCutoff;
+        const finalMaxX = maxX - stickCutoff;
+        const finalWidth = finalMaxX - finalMinX;
+        const finalHeight = maxY - minY;
+
+        // 3. Create the final transparent, cropped image
+        const outCanvas = document.createElement("canvas");
+        const outCtx = outCanvas.getContext("2d");
+        outCanvas.width = finalWidth;
+        outCanvas.height = finalHeight;
+
+        // Draw cropped portion
+        outCtx.drawImage(img, finalMinX, minY, finalWidth, finalHeight, 0, 0, finalWidth, finalHeight);
+
+        // 4. Remove any remaining white
+        const outData = outCtx.getImageData(0, 0, finalWidth, finalHeight);
+        const pixels = outData.data;
+        for (let i = 0; i < pixels.length; i += 4) {
+          if (pixels[i] > 230 && pixels[i+1] > 230 && pixels[i+2] > 230) {
+            pixels[i+3] = 0;
+          }
+        }
+        outCtx.putImageData(outData, 0, 0);
+        resolve(outCanvas.toDataURL());
       };
       img.src = src;
     });
@@ -116,31 +143,23 @@ const VTO = {
       this.loading.style.display = 'none';
     } else {
       this.loading.style.display = 'block';
+      this.loading.textContent = "Positioning face...";
       this.overlay.style.display = 'none';
     }
   },
 
   updateGlasses(landmarks) {
-    // Landmark references: 
-    // Left Iris: 468, Right Iris: 473
-    // Nose Bridge: 6 (Exact spot where glasses sit)
     const leftEye = landmarks[468];
     const rightEye = landmarks[473];
     const noseBridge = landmarks[6];
 
-    // Position X based on center of eyes
     const midX = (leftEye.x + rightEye.x) / 2;
-    // Position Y exactly on the nose bridge
     const midY = noseBridge.y;
-
-    // Head tilt
     const angle = Math.atan2(rightEye.y - leftEye.y, rightEye.x - leftEye.x) * (180 / Math.PI);
-    
-    // Width based on eye distance
     const dist = Math.sqrt(Math.pow(rightEye.x - leftEye.x, 2) + Math.pow(rightEye.y - leftEye.y, 2));
 
-    // Flexible scaling: Multiplier adjusted for cropped image (usually higher)
-    const width = (dist * 3.5 * 100) + this.zoomOffset; 
+    // SCALE: Reduced to 2.2 based on real-world face-to-eye ratios
+    const width = (dist * 2.2 * 100) + this.zoomOffset; 
     
     this.overlay.style.left = `${(1 - midX) * 100}%`;
     this.overlay.style.top = `${midY * 100}%`;
