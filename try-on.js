@@ -1,8 +1,8 @@
 /* ═══════════════════════════════════════════════════════════════
-   Monika Opticals — Virtual Try-On Logic (Precision Fit)
-   - Lenskart-style 1.5x scaling for perfect fit on any face
-   - Vertical density scanning to remove sticks without cutting frames
-   - Anatomical nose-bridge anchoring
+   Monika Opticals — Virtual Try-On Logic (Density Radar Fit)
+   - Vertical Density Radar to cut thin sticks and keep thick frames
+   - 1.9x "Sweet Spot" scaling for perfect realistic fit
+   - Nose-bridge anchor with depth correction
    ═══════════════════════════════════════════════════════════════ */
 
 const VTO = {
@@ -50,11 +50,11 @@ const VTO = {
   async open(imgSrc, name) {
     this.prodName.textContent = name;
     this.loading.style.display = 'block';
-    this.loading.textContent = "Calibrating glasses...";
+    this.loading.textContent = "Processing frames...";
     this.zoomOffset = 0;
     
     try {
-        const finalImg = await this.precisionCrop(imgSrc);
+        const finalImg = await this.densityRadarCrop(imgSrc);
         this.overlay.src = finalImg;
         this.overlay.style.display = 'none';
         this.modal.classList.add('active');
@@ -73,8 +73,8 @@ const VTO = {
     }
   },
 
-  // PRECISION CROP: Scans vertically to find the lenses and remove the thin sticks
-  async precisionCrop(src) {
+  // DENSITY RADAR: Finds the big lenses and eliminates the thin sticks
+  async densityRadarCrop(src) {
     return new Promise((resolve) => {
       const img = new Image();
       img.crossOrigin = "anonymous";
@@ -88,33 +88,35 @@ const VTO = {
         const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
         const data = imgData.data;
 
-        // Find the "dense" part of the frame (the lenses)
-        // We look for where the height of the frame is greatest
-        let leftLimit = 0, rightLimit = img.width;
-        const middle = Math.floor(img.width / 2);
-
-        // Scan from center to left to find where frame ends and sticks begin
-        for (let x = middle; x > 0; x--) {
-          let hasFrame = false;
+        // 1. Calculate the "Density" (Height of dark pixels) for every column
+        const densities = new Array(img.width).fill(0);
+        let maxDensity = 0;
+        for (let x = 0; x < img.width; x++) {
           for (let y = 0; y < img.height; y++) {
             const i = (y * img.width + x) * 4;
-            if (data[i] < 235 || data[i+1] < 235 || data[i+2] < 235) {
-              hasFrame = true; break;
+            if (data[i] < 240 || data[i+1] < 240 || data[i+2] < 240) {
+              densities[x]++;
             }
           }
-          if (!hasFrame) { leftLimit = x; break; }
+          if (densities[x] > maxDensity) maxDensity = densities[x];
         }
 
-        // Scan from center to right
-        for (let x = middle; x < img.width; x++) {
-          let hasFrame = false;
-          for (let y = 0; y < img.height; y++) {
-            const i = (y * img.width + x) * 4;
-            if (data[i] < 235 || data[i+1] < 235 || data[i+2] < 235) {
-              hasFrame = true; break;
-            }
+        // 2. Scan from center and stop when density drops (where sticks start)
+        const middle = Math.floor(img.width / 2);
+        let leftLimit = 0, rightLimit = img.width;
+
+        // Left scan
+        for (let x = middle; x > 0; x--) {
+          // If the height of the frame suddenly drops below 35% of the lens height, it's a stick!
+          if (densities[x] < maxDensity * 0.35) {
+            leftLimit = x; break;
           }
-          if (!hasFrame) { rightLimit = x; break; }
+        }
+        // Right scan
+        for (let x = middle; x < img.width; x++) {
+          if (densities[x] < maxDensity * 0.35) {
+            rightLimit = x; break;
+          }
         }
 
         const finalWidth = rightLimit - leftLimit;
@@ -122,10 +124,9 @@ const VTO = {
         const outCtx = outCanvas.getContext("2d");
         outCanvas.width = finalWidth;
         outCanvas.height = img.height;
-
         outCtx.drawImage(img, leftLimit, 0, finalWidth, img.height, 0, 0, finalWidth, img.height);
 
-        // Remove background white
+        // Remove white
         const outData = outCtx.getImageData(0, 0, finalWidth, img.height);
         const p = outData.data;
         for (let i = 0; i < p.length; i += 4) {
@@ -151,20 +152,20 @@ const VTO = {
   updateGlasses(landmarks) {
     const leftEye = landmarks[468];
     const rightEye = landmarks[473];
-    const noseBridge = landmarks[6]; // Proper anchor point
+    const noseBridge = landmarks[6];
 
     const midX = (leftEye.x + rightEye.x) / 2;
     const midY = noseBridge.y;
     const angle = Math.atan2(rightEye.y - leftEye.y, rightEye.x - leftEye.x) * (180 / Math.PI);
     const dist = Math.sqrt(Math.pow(rightEye.x - leftEye.x, 2) + Math.pow(rightEye.y - leftEye.y, 2));
 
-    // SCALE: Precise 1.5 ratio for a standardized fit
-    const width = (dist * 1.5 * 100) + this.zoomOffset; 
+    // SCALE: 1.9 is the perfect middle-ground fit
+    const width = (dist * 1.9 * 100) + this.zoomOffset; 
     
     this.overlay.style.left = `${(1 - midX) * 100}%`;
     this.overlay.style.top = `${midY * 100}%`;
     this.overlay.style.width = width + '%';
-    this.overlay.style.transform = `translate(-50%, -40%) rotate(${-angle}deg)`; // -40% offset for better nose fit
+    this.overlay.style.transform = `translate(-50%, -45%) rotate(${-angle}deg)`;
     this.overlay.style.display = 'block';
   },
 
