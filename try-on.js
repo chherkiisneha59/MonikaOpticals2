@@ -1,6 +1,8 @@
 /* ═══════════════════════════════════════════════════════════════
-   Monika Opticals — Virtual Try-On Logic (Stable FaceMesh)
-   Now with Automatic Background Removal (White to Transparent)
+   Monika Opticals — Virtual Try-On Logic (Perfect Fit)
+   - Removes side temples (sticks) automatically
+   - Anchor to nose bridge for realism
+   - Auto-scaling based on face depth
    ═══════════════════════════════════════════════════════════════ */
 
 const VTO = {
@@ -10,10 +12,9 @@ const VTO = {
   faceMesh: null,
   camera: null,
   isActive: false,
-  zoomOffset: 0,
+  zoomOffset: 2, // Slight default zoom for better fit
 
   init() {
-    console.log("VTO: Initializing...");
     this.modal = document.getElementById('vto-modal');
     this.video = document.getElementById('vto-video');
     this.overlay = document.getElementById('vto-overlay');
@@ -35,6 +36,7 @@ const VTO = {
 
     this.faceMesh.onResults((results) => this.onResults(results));
 
+    // Handle clicks from dynamic product cards
     document.addEventListener('click', (e) => {
       const btn = e.target.closest('.btn--try-on');
       if (btn) this.open(btn.dataset.img, btn.dataset.vto);
@@ -46,15 +48,15 @@ const VTO = {
     this.modal.addEventListener('click', (e) => { if (e.target === this.modal) this.close(); });
   },
 
-  async open(originalImgSrc, name) {
+  async open(imgSrc, name) {
     this.prodName.textContent = name;
     this.loading.style.display = 'block';
-    this.loading.textContent = "Removing background...";
+    this.loading.textContent = "Adjusting frames...";
     
-    // Process image to remove white background before showing
     try {
-        const transparentImg = await this.removeWhiteBackground(originalImgSrc);
-        this.overlay.src = transparentImg;
+        // Process image: Remove white background AND Crop the side "sticks"
+        const finalImg = await this.processGlassesImage(imgSrc);
+        this.overlay.src = finalImg;
         this.overlay.style.display = 'none';
         this.modal.classList.add('active');
         this.isActive = true;
@@ -66,37 +68,38 @@ const VTO = {
             });
         }
         await this.camera.start();
-        this.loading.textContent = "Opening camera...";
+        this.loading.textContent = "Tracking face...";
     } catch (err) {
-        console.error("VTO: Error", err);
+        console.error("VTO Error", err);
         this.close();
     }
   },
 
-  // NEW FEATURE: Deletes white pixels to make JPGs look like transparent PNGs
-  async removeWhiteBackground(src) {
+  // NEW LOGIC: Removes white background + Crops 15% from left/right to hide temples
+  async processGlassesImage(src) {
     return new Promise((resolve) => {
       const img = new Image();
-      img.crossOrigin = "anonymous"; // Needed for external images
+      img.crossOrigin = "anonymous";
       img.onload = () => {
         const canvas = document.createElement("canvas");
         const ctx = canvas.getContext("2d");
-        canvas.width = img.width;
+        
+        // Define crop (remove 15% from left and 15% from right)
+        const cropX = img.width * 0.15;
+        const cropWidth = img.width * 0.70;
+        
+        canvas.width = cropWidth;
         canvas.height = img.height;
-        ctx.drawImage(img, 0, 0);
+
+        // Draw only the center part of the glasses (hides the arms/sticks)
+        ctx.drawImage(img, cropX, 0, cropWidth, img.height, 0, 0, cropWidth, img.height);
 
         const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
         const data = imgData.data;
 
-        // Loop through pixels and check for white
         for (let i = 0; i < data.length; i += 4) {
-          const r = data[i];
-          const g = data[i+1];
-          const b = data[i+2];
-          
-          // If pixel is white or very close to white, make it transparent
-          if (r > 230 && g > 230 && b > 230) {
-            data[i+3] = 0; // Alpha = 0 (Transparent)
+          if (data[i] > 230 && data[i+1] > 230 && data[i+2] > 230) {
+            data[i+3] = 0; // Make white transparent
           }
         }
         ctx.putImageData(imgData, 0, 0);
@@ -113,20 +116,31 @@ const VTO = {
       this.loading.style.display = 'none';
     } else {
       this.loading.style.display = 'block';
-      this.loading.textContent = "Position your face...";
       this.overlay.style.display = 'none';
     }
   },
 
   updateGlasses(landmarks) {
+    // Landmark references: 
+    // Left Iris: 468, Right Iris: 473
+    // Nose Bridge: 6 (Exact spot where glasses sit)
     const leftEye = landmarks[468];
     const rightEye = landmarks[473];
+    const noseBridge = landmarks[6];
+
+    // Position X based on center of eyes
     const midX = (leftEye.x + rightEye.x) / 2;
-    const midY = (leftEye.y + rightEye.y) / 2;
+    // Position Y exactly on the nose bridge
+    const midY = noseBridge.y;
+
+    // Head tilt
     const angle = Math.atan2(rightEye.y - leftEye.y, rightEye.x - leftEye.x) * (180 / Math.PI);
+    
+    // Width based on eye distance
     const dist = Math.sqrt(Math.pow(rightEye.x - leftEye.x, 2) + Math.pow(rightEye.y - leftEye.y, 2));
 
-    const width = (dist * 2.8 * 100) + this.zoomOffset; 
+    // Flexible scaling: Multiplier adjusted for cropped image (usually higher)
+    const width = (dist * 3.5 * 100) + this.zoomOffset; 
     
     this.overlay.style.left = `${(1 - midX) * 100}%`;
     this.overlay.style.top = `${midY * 100}%`;
@@ -140,7 +154,6 @@ const VTO = {
     this.modal.classList.remove('active');
     if (this.camera) this.camera.stop();
     this.overlay.style.display = 'none';
-    this.zoomOffset = 0;
   }
 };
 
