@@ -157,7 +157,32 @@
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
   </a>
 
+  <!-- ═══════════ VIRTUAL TRY-ON MODAL ═══════════ -->
+  <div class="vto-modal" id="vto-modal">
+    <div class="vto-container">
+      <button class="vto-close" id="vto-close">&times;</button>
+      <div class="vto-video-wrap">
+        <video class="vto-video" id="vto-video" autoplay playsinline muted></video>
+        <img src="" class="vto-glasses-overlay" id="vto-overlay" alt="Glasses Overlay" />
+        <div id="vto-loading" style="position:absolute; color:white; font-size:0.9rem;">Initializing Camera...</div>
+      </div>
+      <div class="vto-controls">
+        <div>
+          <h4 id="vto-product-name" style="margin-bottom:4px; font-family:var(--font-serif);">Product Name</h4>
+          <p style="font-size:0.75rem; color:var(--color-text-muted);">Position your face in the center</p>
+        </div>
+        <div style="display:flex; gap:10px;">
+          <button class="btn btn--outline" id="vto-zoom-out" style="padding:8px 12px;">−</button>
+          <button class="btn btn--outline" id="vto-zoom-in" style="padding:8px 12px;">+</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════ SCRIPTS ═══════════ -->
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision/vision_bundle.js"></script>
   <script src="api-config.js?v=4.1.0"></script>
   <script src="collection.js?v=4.1.0"></script>
+  <script src="try-on.js?v=4.1.0"></script>
 </body>
 </html>
