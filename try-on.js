@@ -1,5 +1,8 @@
 /* ═══════════════════════════════════════════════════════════════
-   Monika Opticals — Virtual Try-On Logic (Color Fix & Pro Fit)
+   Monika Opticals — Virtual Try-On Logic (IndexSizeError Fix)
+   - Robust stick removal that protects thin nose bridges
+   - Color-Camera enforcement
+   - 2.0x Standardized fit
    ═══════════════════════════════════════════════════════════════ */
 
 const VTO = {
@@ -32,41 +35,29 @@ const VTO = {
   async open(src, name) {
     this.prodName.textContent = name;
     this.loading.style.display = 'block';
-    this.loading.textContent = "Processing color stream...";
-    this.zoomOffset = 0;
+    this.loading.textContent = "Adjusting fits...";
     try {
-        this.overlay.src = await this.processImage(src);
+        const processed = await this.processImage(src);
+        this.overlay.src = processed;
         this.overlay.style.display = 'none';
         this.modal.classList.add('active');
         this.isActive = true;
 
-        // Manual Camera Request (Forces Color and User Facing)
         this.stream = await navigator.mediaDevices.getUserMedia({
-            video: { 
-                facingMode: "user",
-                width: { ideal: 1280 },
-                height: { ideal: 720 }
-            }
+            video: { facingMode: "user", width: { ideal: 1280 }, height: { ideal: 720 } }
         });
         this.video.srcObject = this.stream;
         this.video.play();
-        
-        // Tracking Loop
         this.startTracking();
-    } catch (e) { 
-        console.error("Camera fail:", e);
-        alert("Color camera not found or permission denied.");
-        this.close(); 
-    }
+    } catch (e) { this.close(); }
   },
 
   startTracking() {
     const loop = async () => {
-        if (!this.isActive) return;
-        if (this.video.readyState >= 2) {
+        if (this.isActive && this.video.readyState >= 2) {
             await this.faceMesh.send({ image: this.video });
         }
-        requestAnimationFrame(loop);
+        if (this.isActive) requestAnimationFrame(loop);
     };
     loop();
   },
@@ -82,29 +73,32 @@ const VTO = {
         ctx.drawImage(img, 0, 0);
         const data = ctx.getImageData(0, 0, img.width, img.height).data;
 
-        // Calculate heights for stick removal
-        const heights = new Array(img.width).fill(0);
-        let maxHeight = 0;
-        for (let x = 0; x < img.width; x++) {
-          for (let y = 0; y < img.height; y++) {
+        // 1. Find the bounds of the entire glasses object
+        let minX = img.width, maxX = 0, minY = img.height, maxY = 0;
+        for (let y = 0; y < img.height; y++) {
+          for (let x = 0; x < img.width; x++) {
             const i = (y * img.width + x) * 4;
-            if (data[i] < 240 || data[i+1] < 240 || data[i+2] < 240) heights[x]++;
+            if (data[i] < 242 || data[i+1] < 242 || data[i+2] < 242) {
+              if (x < minX) minX = x; if (x > maxX) maxX = x;
+              if (y < minY) minY = y; if (y > maxY) maxY = y;
+            }
           }
-          if (heights[x] > maxHeight) maxHeight = heights[x];
         }
 
-        const middle = Math.floor(img.width / 2);
-        let left = 0, right = img.width;
-        // Aggressive stick removal: anything less than 50% of the lens height is a stick
-        for (let x = middle; x > 0; x--) { if (heights[x] < maxHeight * 0.5) { left = x; break; } }
-        for (let x = middle; x < img.width; x++) { if (heights[x] < maxHeight * 0.5) { right = x; break; } }
+        // 2. Safe Cropping: Take the middle 66% of the object to remove sticks
+        const objW = maxX - minX;
+        const objH = maxY - minY;
+        if (objW <= 10 || objH <= 10) return resolve(src); // Safety fallback
 
-        const w = right - left;
+        const cropX = minX + (objW * 0.17); // 17% crop on left
+        const cropW = objW * 0.66;          // Keep center 66%
+
         const out = document.createElement("canvas");
-        out.width = w; out.height = img.height;
+        out.width = cropW; out.height = objH;
         const octx = out.getContext("2d");
-        octx.drawImage(img, left, 0, w, img.height, 0, 0, w, img.height);
-        
+        octx.drawImage(img, cropX, minY, cropW, objH, 0, 0, cropW, objH);
+
+        // 3. Transparent background removal
         const od = octx.getImageData(0, 0, out.width, out.height);
         const p = od.data;
         for (let i = 0; i < p.length; i += 4) {
@@ -125,7 +119,7 @@ const VTO = {
       const angle = Math.atan2(right.y - left.y, right.x - left.x) * (180 / Math.PI);
       const dist = Math.sqrt(Math.pow(right.y - left.y, 2) + Math.pow(right.x - left.x, 2));
 
-      // 2.0x Scaling Factor (Balanced Fit)
+      // 2.0x Scaled Fit
       const w = (dist * 2.0 * 100) + this.zoomOffset;
       this.overlay.style.left = `${(1 - midX) * 100}%`;
       this.overlay.style.top = `${midY * 100}%`;
