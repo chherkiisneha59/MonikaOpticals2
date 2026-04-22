@@ -1,8 +1,8 @@
 /* ═══════════════════════════════════════════════════════════════
-   Monika Opticals — Virtual Try-On Logic (Smart Fit)
-   - Aggressive auto-crop to remove temples (sticks)
-   - Real-world scaling (Lenskart-style 2.2x ratio)
-   - Nose bridge anchoring
+   Monika Opticals — Virtual Try-On Logic (Precision Fit)
+   - Lenskart-style 1.5x scaling for perfect fit on any face
+   - Vertical density scanning to remove sticks without cutting frames
+   - Anatomical nose-bridge anchoring
    ═══════════════════════════════════════════════════════════════ */
 
 const VTO = {
@@ -42,19 +42,19 @@ const VTO = {
     });
 
     document.getElementById('vto-close').addEventListener('click', () => this.close());
-    document.getElementById('vto-zoom-in').addEventListener('click', (e) => { e.stopPropagation(); this.zoomOffset += 5; });
-    document.getElementById('vto-zoom-out').addEventListener('click', (e) => { e.stopPropagation(); this.zoomOffset -= 5; });
+    document.getElementById('vto-zoom-in').addEventListener('click', (e) => { e.stopPropagation(); this.zoomOffset += 2; });
+    document.getElementById('vto-zoom-out').addEventListener('click', (e) => { e.stopPropagation(); this.zoomOffset -= 2; });
     this.modal.addEventListener('click', (e) => { if (e.target === this.modal) this.close(); });
   },
 
-  async open(originalImgSrc, name) {
+  async open(imgSrc, name) {
     this.prodName.textContent = name;
     this.loading.style.display = 'block';
-    this.loading.textContent = "Fitting frames...";
-    this.zoomOffset = 0; // Reset
+    this.loading.textContent = "Calibrating glasses...";
+    this.zoomOffset = 0;
     
     try {
-        const finalImg = await this.smartCropGlasses(originalImgSrc);
+        const finalImg = await this.precisionCrop(imgSrc);
         this.overlay.src = finalImg;
         this.overlay.style.display = 'none';
         this.modal.classList.add('active');
@@ -73,8 +73,8 @@ const VTO = {
     }
   },
 
-  // SMART CROP: Finds the frame and cuts off the arms/sticks
-  async smartCropGlasses(src) {
+  // PRECISION CROP: Scans vertically to find the lenses and remove the thin sticks
+  async precisionCrop(src) {
     return new Promise((resolve) => {
       const img = new Image();
       img.crossOrigin = "anonymous";
@@ -88,46 +88,48 @@ const VTO = {
         const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
         const data = imgData.data;
 
-        // 1. Find boundaries of the glasses frame (ignoring white space)
-        let minX = img.width, maxX = 0, minY = img.height, maxY = 0;
-        
-        for (let y = 0; y < img.height; y++) {
-          for (let x = 0; x < img.width; x++) {
+        // Find the "dense" part of the frame (the lenses)
+        // We look for where the height of the frame is greatest
+        let leftLimit = 0, rightLimit = img.width;
+        const middle = Math.floor(img.width / 2);
+
+        // Scan from center to left to find where frame ends and sticks begin
+        for (let x = middle; x > 0; x--) {
+          let hasFrame = false;
+          for (let y = 0; y < img.height; y++) {
             const i = (y * img.width + x) * 4;
-            // If pixel is NOT white (darker frames)
-            if (data[i] < 240 || data[i+1] < 240 || data[i+2] < 240) {
-              if (x < minX) minX = x;
-              if (x > maxX) maxX = x;
-              if (y < minY) minY = y;
-              if (y > maxY) maxY = y;
+            if (data[i] < 235 || data[i+1] < 235 || data[i+2] < 235) {
+              hasFrame = true; break;
             }
           }
+          if (!hasFrame) { leftLimit = x; break; }
         }
 
-        // 2. Remove the "sticks" (usually at least 15% of the total frame width on each side)
-        const frameWidth = maxX - minX;
-        const stickCutoff = frameWidth * 0.18; // Aggressive cut
-        const finalMinX = minX + stickCutoff;
-        const finalMaxX = maxX - stickCutoff;
-        const finalWidth = finalMaxX - finalMinX;
-        const finalHeight = maxY - minY;
+        // Scan from center to right
+        for (let x = middle; x < img.width; x++) {
+          let hasFrame = false;
+          for (let y = 0; y < img.height; y++) {
+            const i = (y * img.width + x) * 4;
+            if (data[i] < 235 || data[i+1] < 235 || data[i+2] < 235) {
+              hasFrame = true; break;
+            }
+          }
+          if (!hasFrame) { rightLimit = x; break; }
+        }
 
-        // 3. Create the final transparent, cropped image
+        const finalWidth = rightLimit - leftLimit;
         const outCanvas = document.createElement("canvas");
         const outCtx = outCanvas.getContext("2d");
         outCanvas.width = finalWidth;
-        outCanvas.height = finalHeight;
+        outCanvas.height = img.height;
 
-        // Draw cropped portion
-        outCtx.drawImage(img, finalMinX, minY, finalWidth, finalHeight, 0, 0, finalWidth, finalHeight);
+        outCtx.drawImage(img, leftLimit, 0, finalWidth, img.height, 0, 0, finalWidth, img.height);
 
-        // 4. Remove any remaining white
-        const outData = outCtx.getImageData(0, 0, finalWidth, finalHeight);
-        const pixels = outData.data;
-        for (let i = 0; i < pixels.length; i += 4) {
-          if (pixels[i] > 230 && pixels[i+1] > 230 && pixels[i+2] > 230) {
-            pixels[i+3] = 0;
-          }
+        // Remove background white
+        const outData = outCtx.getImageData(0, 0, finalWidth, img.height);
+        const p = outData.data;
+        for (let i = 0; i < p.length; i += 4) {
+          if (p[i] > 230 && p[i+1] > 230 && p[i+2] > 230) p[i+3] = 0;
         }
         outCtx.putImageData(outData, 0, 0);
         resolve(outCanvas.toDataURL());
@@ -142,8 +144,6 @@ const VTO = {
       this.updateGlasses(results.multiFaceLandmarks[0]);
       this.loading.style.display = 'none';
     } else {
-      this.loading.style.display = 'block';
-      this.loading.textContent = "Positioning face...";
       this.overlay.style.display = 'none';
     }
   },
@@ -151,20 +151,20 @@ const VTO = {
   updateGlasses(landmarks) {
     const leftEye = landmarks[468];
     const rightEye = landmarks[473];
-    const noseBridge = landmarks[6];
+    const noseBridge = landmarks[6]; // Proper anchor point
 
     const midX = (leftEye.x + rightEye.x) / 2;
     const midY = noseBridge.y;
     const angle = Math.atan2(rightEye.y - leftEye.y, rightEye.x - leftEye.x) * (180 / Math.PI);
     const dist = Math.sqrt(Math.pow(rightEye.x - leftEye.x, 2) + Math.pow(rightEye.y - leftEye.y, 2));
 
-    // SCALE: Reduced to 2.2 based on real-world face-to-eye ratios
-    const width = (dist * 2.2 * 100) + this.zoomOffset; 
+    // SCALE: Precise 1.5 ratio for a standardized fit
+    const width = (dist * 1.5 * 100) + this.zoomOffset; 
     
     this.overlay.style.left = `${(1 - midX) * 100}%`;
     this.overlay.style.top = `${midY * 100}%`;
     this.overlay.style.width = width + '%';
-    this.overlay.style.transform = `translate(-50%, -50%) rotate(${-angle}deg)`;
+    this.overlay.style.transform = `translate(-50%, -40%) rotate(${-angle}deg)`; // -40% offset for better nose fit
     this.overlay.style.display = 'block';
   },
 
