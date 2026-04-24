@@ -6,7 +6,11 @@
    ═══════════════════════════════════════════════════════════════ */
 
 
-const ADMIN_PASSWORD = 'monika1980';
+// ═══════════════════════════════════════════════════════════════
+// ADMIN CONFIGURATION
+// ═══════════════════════════════════════════════════════════════
+const ADMIN_PASSWORD = 'monika1980'; // The owner can change this string here
+
 
 const CATEGORY_LABELS = {
   sunglasses: 'Sunglasses', reading: 'Reading', computer: 'Computer',
