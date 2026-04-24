@@ -4,7 +4,16 @@
    from the central API_CONFIG.BUSINESS object.
    ═══════════════════════════════════════════════════════════════ */
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
+    // 1. Fetch secure config from backend to override static defaults
+    try {
+        const res = await fetch(API_CONFIG.api('/api/config'));
+        if (res.ok) {
+            const secureBiz = await res.json();
+            Object.assign(API_CONFIG.BUSINESS, secureBiz);
+        }
+    } catch (e) { console.warn('Using static business info defaults.'); }
+
     const biz = API_CONFIG.BUSINESS;
     if (!biz) return;
 

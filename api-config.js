@@ -5,8 +5,8 @@ const API_CONFIG = (() => {
   // OWNER CONFIGURATION — Update these when handing over
   // ═══════════════════════════════════════════════════════════════
   const BUSINESS_INFO = {
-    email: 'cherkiisneha@gmail.com',
-    adminEmail: 'cherkiisneha@gmail.com',
+    email: 'REPLACE_WITH_OWNER_EMAIL',
+    adminEmail: 'REPLACE_WITH_OWNER_EMAIL',
     phone: '+91 8109204075',
     whatsapp: '918109204075',
     address: 'Civil Lines, Vidisha, Madhya Pradesh 464001',

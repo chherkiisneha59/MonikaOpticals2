@@ -7,9 +7,8 @@
 
 
 // ═══════════════════════════════════════════════════════════════
-// ADMIN CONFIGURATION
+// ADMIN PANEL STATE
 // ═══════════════════════════════════════════════════════════════
-const ADMIN_PASSWORD = 'monika1980'; // The owner can change this string here
 
 
 const CATEGORY_LABELS = {
@@ -107,13 +106,23 @@ function switchTab(tabName) {
 /* ══════════════════════════════════════════════════════════
    AUTH
    ══════════════════════════════════════════════════════════ */
-function handleLogin() {
+async function handleLogin() {
   const pwd = document.getElementById('admin-password').value;
-  if (pwd === ADMIN_PASSWORD) {
-    sessionStorage.setItem('monika_admin_auth', 'true');
-    showDashboard();
-  } else {
-    document.getElementById('login-error').textContent = 'Incorrect password. Try again.';
+  try {
+    const res = await fetch(API_CONFIG.api('/api/login'), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ password: pwd })
+    });
+    const data = await res.json();
+    if (data.ok) {
+      sessionStorage.setItem('monika_admin_auth', 'true');
+      showDashboard();
+    } else {
+      throw new Error(data.error);
+    }
+  } catch (err) {
+    document.getElementById('login-error').textContent = err.message || 'Incorrect password. Try again.';
     document.getElementById('admin-password').classList.add('shake');
     setTimeout(() => document.getElementById('admin-password').classList.remove('shake'), 500);
   }

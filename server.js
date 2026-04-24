@@ -51,6 +51,28 @@ app.get('/', (req, res) => {
   });
 });
 
+/* ── Config Route (Secure Handoff) ── */
+app.get('/api/config', (req, res) => {
+  res.json({
+    email: process.env.ADMIN_EMAIL || '',
+    phone: process.env.BUSINESS_PHONE || '',
+    whatsapp: process.env.BUSINESS_WHATSAPP || '',
+    address: process.env.BUSINESS_ADDRESS || '',
+    mapsUrl: process.env.BUSINESS_MAPS_URL || ''
+  });
+});
+
+/* ── Auth Route (Secure) ── */
+app.post('/api/login', (req, res) => {
+  const { password } = req.body;
+  const adminPassword = process.env.ADMIN_PASSWORD || 'monika1980';
+  if (password === adminPassword) {
+    res.json({ ok: true });
+  } else {
+    res.status(401).json({ ok: false, error: 'Incorrect password' });
+  }
+});
+
 /* ── Debug Route ── */
 app.get('/api/debug-supabase', async (req, res) => {
   try {
