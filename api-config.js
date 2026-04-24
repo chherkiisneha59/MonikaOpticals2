@@ -6,6 +6,7 @@ const API_CONFIG = (() => {
   // ═══════════════════════════════════════════════════════════════
   const BUSINESS_INFO = {
     email: 'info@monikaopticals.com',
+    adminEmail: 'info@monikaopticals.com',
     phone: '+91 8109204075',
     whatsapp: '918109204075',
     address: 'Civil Lines, Vidisha, Madhya Pradesh 464001',
