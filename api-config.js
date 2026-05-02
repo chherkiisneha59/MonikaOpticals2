@@ -1,6 +1,6 @@
 const API_CONFIG = (() => {
   const BACKEND_URL = 'https://monikaopticals2-cakb.onrender.com';
-  
+
   return {
     BASE_URL: BACKEND_URL,
     api: (path) => `${BACKEND_URL}${path.startsWith('/') ? '' : '/'}${path}`,
