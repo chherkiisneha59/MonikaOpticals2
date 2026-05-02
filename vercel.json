@@ -4,7 +4,7 @@
   "rewrites": [
     {
       "source": "/api/:path*",
-      "destination": "https://monikaopticals2-nr5i.onrender.com/api/:path*"
+      "destination": "https://monikaopticals2-cakb.onrender.com/api/:path*"
     }
   ]
 }
